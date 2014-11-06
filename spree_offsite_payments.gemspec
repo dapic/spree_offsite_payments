@@ -1,24 +1,32 @@
-# coding: utf-8
-lib = File.expand_path('../lib', __FILE__)
-$LOAD_PATH.unshift(lib) unless $LOAD_PATH.include?(lib)
-require 'spree_offsite_payments/version'
+# encoding: UTF-8
+require './lib/spree_offsite_payments/version'
+Gem::Specification.new do |s|
+  s.platform    = Gem::Platform::RUBY
+  s.name        = 'spree_offsite_payments'
+  s.version     = SpreeOffsitePayments::VERSION
+  s.authors       = ["叶树剑"]
+  s.email         = ["yeshujian@shiguangcaibei.com"]
+  s.summary       = %q{This gem integrates Shopify Offsite_Payments gem with Spree Commerce.}
+  s.description   = %q{This is to replace the "spree_alipay" gem.}
+  s.license     = 'New BSD'
+  s.required_ruby_version = '>= 1.9.3'
 
-Gem::Specification.new do |spec|
-  spec.name          = "spree_offsite_payments"
-  spec.version       = SpreeOffsitePayments::VERSION
-  spec.authors       = ["叶树剑"]
-  spec.email         = ["yeshujian@shiguangcaibei.com"]
-  spec.summary       = %q{This gem integrates Shopify Offsite_Payments gem with Spree Commerce.}
-  spec.description   = %q{This is to replace the "spree_alipay" gem.}
-  spec.homepage      = ""
-  spec.license       = "MIT"
+  s.files         = `git ls-files -z`.split("\x0")
+  s.executables   = s.files.grep(%r{^bin/}) { |f| File.basename(f) }
+  s.test_files    = s.files.grep(%r{^(test|spec|features)/})
+  s.require_path = 'lib'
+  s.requirements << 'none'
 
-  spec.files         = `git ls-files -z`.split("\x0")
-  spec.executables   = spec.files.grep(%r{^bin/}) { |f| File.basename(f) }
-  spec.test_files    = spec.files.grep(%r{^(test|spec|features)/})
-  spec.require_paths = ["lib"]
+  s.add_dependency 'spree_core', '~> 2.3.1'
 
-  spec.add_development_dependency "bundler", "~> 1.7"
-  spec.add_development_dependency "rake", "~> 10.0"
-  spec.add_development_dependency "rspec"
+  s.add_development_dependency 'capybara', '~> 2.1'
+  s.add_development_dependency 'coffee-rails'
+  s.add_development_dependency 'database_cleaner'
+  s.add_development_dependency 'factory_girl', '~> 4.4'
+  s.add_development_dependency 'ffaker'
+  s.add_development_dependency 'rspec-rails',  '~> 2.13'
+  s.add_development_dependency 'sass-rails', '~> 4.0.2'
+  s.add_development_dependency 'selenium-webdriver'
+  s.add_development_dependency 'simplecov'
+  s.add_development_dependency 'sqlite3'
 end

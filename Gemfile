@@ -1,4 +1,8 @@
 source 'https://rubygems.org'
+source 'http://ruby.taobao.org'
 
-# Specify your gem's dependencies in spree_offsite_payments.gemspec
+gem 'spree', github: 'spree/spree', branch: '2-3-stable'
+# Provides basic authentication functionality for testing parts of your engine
+gem 'spree_auth_devise', github: 'spree/spree_auth_devise', branch: '2-3-stable'
+
 gemspec
