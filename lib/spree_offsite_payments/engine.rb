@@ -1,4 +1,3 @@
-require 'version'
 module SpreeOffsitePayments
   class Engine < Rails::Engine
     require 'spree/core'

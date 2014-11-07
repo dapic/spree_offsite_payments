@@ -1,3 +1,5 @@
+# encoding: utf-8
+File.expand_path('../lib', __FILE__).tap{|lib|$LOAD_PATH.unshift(lib) unless $LOAD_PATH.include?(lib)}
 require 'bundler'
 Bundler::GemHelper.install_tasks
 
