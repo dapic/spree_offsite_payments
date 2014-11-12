@@ -1,7 +1,7 @@
 SpreeOffsitePayments
 ====================
 
-This gem is a [Spree Commerce](https://github.com/spree/spree) extention that integrates Shopify [Offsite_Payments](https://github.com/Shopify/offsite_payments) with Spree Commerce.
+This gem is a [Spree Commerce](https://github.com/spree/spree) extention that integrates Shopify [Offsite_Payments](https://github.com/Shopify/offsite_payments) with Spree Commerce. As Spree extensions are Rails engines, this is therefore also a Rails engine.
 
 It is inspired by and intended to replace [spree_alipay](https://github.com/RuanShan/spree_alipay).
 
