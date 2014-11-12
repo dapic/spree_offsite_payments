@@ -1,0 +1,17 @@
+<% 
+tenpay = @order.payment.payment_method
+%>
+<% payment_service_for @order.number, tenpay.preferred_partner,
+                            :service => :tenpay,
+                            :html => { :id => 'payment-form', :method => :get } do |service| %>
+<% Rails.logger.debug "service="+service.form_fields.inspect %>
+  <% service.body @order.products.collect(&:name).to_s %>
+  <% service.total_fee @order.total %>
+  <% service.notify_url url_for(:only_path => false, :action => 'tenpay_notify') %>
+  <% service.return_url url_for(:only_path => false, :action => 'tenpay_done') %>
+  <% service.charset "utf-8" %>
+  <% service.fee_type 1 %>
+  <% service.remote_ip request.remote_ip %>
+  <% service.sign %>
+<% end %>
+<%= button_to_function "Submit", "$('#payment-form>:first-child').remove();document.getElementById('payment-form').submit()" %>
