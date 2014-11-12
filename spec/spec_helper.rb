@@ -81,4 +81,5 @@ RSpec.configure do |config|
 
   config.fail_fast = ENV['FAIL_FAST'] || false
   config.order = "random"
+  config.expose_current_running_example_as :example
 end
