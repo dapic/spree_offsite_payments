@@ -52,36 +52,17 @@ module Spree
         alipay_handle_billing_integration
       end
     end
-
-    #This overrides the method in CheckoutController
-    def wrong_load_order_with_lock
-
-      Rails.logger.debug "#{__LINE__}:#{request.path_parameters[:action]}"
-      
-      #alipay_load_order
-      super unless @order.present? 
-    rescue RuntimeError => e
-      Rails.logger.error("alipay_load_order failed since: #{e.message}")
-      render text: 'fail'
-    end
-
-    # This is done in the default checkout_controller filter chain
-    def alipay_load_order
-      raise "'out_trade_no' requird to load the order" unless params.key?('out_trade_no')
-      order_number = parse_alipay_out_trade_no(params['out_trade_no'])[:payment_order_number]
-      @order  = Order.find_by_number(order_number) #if request.referer=~/alipay.com/
-      unless @order.present?
-        raise RuntimeError, "Could not find order #{order_number}"
-      end
-    end
     
   private
 
+    # This is put at the front of the filter chain for "return" and "notification" requests
+    # Loading order is after this step so we have to get the payment_method by class name, instead of
+    # getting it from the order
     def ensure_valid_alipay_request
       #@payment_method = Spree::BillingIntegration::Alipay.new()
       @payment_method = Spree::PaymentMethod.find_by(type: Spree::BillingIntegration::Alipay)
-      Rails.logger.debug "key is #{@payment_method.inspect}"
-      Rails.logger.debug "key is #{@payment_method.preferred_sign}"
+      #Rails.logger.debug "key is #{@payment_method.inspect}"
+      #Rails.logger.debug "key is #{@payment_method.preferred_sign}"
       case request.path_parameters[:action]
       when 'alipay_notify'
         begin
@@ -94,7 +75,7 @@ module Spree
       when 'alipay_done'
         begin
         @return = OffsitePayments::Integrations::Alipay.return(request.query_string, key: @payment_method.preferred_sign) 
-        #@return.acknowledge
+        @return.acknowledge
         rescue RuntimeError => e
           Rails.logger.warn(e)
           flash[:error] = Spree.t('illegal_sign_in_request')
@@ -102,6 +83,16 @@ module Spree
         end
       else
         raise RuntimeError, "Configuration error. It shouldn't get here"
+      end
+    end
+
+    # This is done in the default checkout_controller filter chain
+    def alipay_load_order
+      raise "'out_trade_no' requird to load the order" unless params.key?('out_trade_no')
+      order_number = parse_alipay_out_trade_no(params['out_trade_no'])[:payment_order_number]
+      @order  = Order.find_by_number(order_number) #if request.referer=~/alipay.com/
+      unless @order.present?
+        raise RuntimeError, "Could not find order #{order_number}"
       end
     end
 
