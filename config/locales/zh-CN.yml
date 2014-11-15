@@ -1,0 +1,6 @@
+zh-CN:
+  spree:
+    order_processed_successfully: 订单处理成功
+    order_processed_already: 此订单已处理过
+    invalid_alipay_request: 异常的支付宝请求
+    illegal_sign_in_request: 不合法的支付宝请求
