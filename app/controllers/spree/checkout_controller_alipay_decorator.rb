@@ -59,7 +59,14 @@ module Spree
     
     def alipay_checkout_hook
       #TODO support step confirmation 
-      return unless @order.next_step_complete?
+      return unless params['state'] == 'payment' # @order.next_step_complete?
+      payment_method = PaymentMethod.find(params[:order][:payments_attributes].first[:payment_method_id])
+      Rails.logger.debug ("payment_method_id is --> #{params[:order][:payments_attributes].first[:payment_method_id]}")
+      Rails.logger.debug ("payment_method is --> #{payment_method.name}")
+      return unless Spree::BillingIntegration::Alipay == payment_method.class
+
+      payment = @order.payments.processing.find_or_create_by(amount: @order.outstanding_balance, payment_method: payment_method)
+      redirect_to alipay_full_service_url(payment, payment_method)
       #return unless params[:order][:payments_attributes].present?
 
       # all payments through alipay has these states:
@@ -71,9 +78,6 @@ module Spree
       #  TODO: we should stop price from being changed after "processing"
       #  * failed --  when we receive return/notify saying the payment failed, or _confirmation_ failed
       #payment_method = PaymentMethod.find(params[:payment_method_id])
-      payment_method = PaymentMethod.find_by(type: Spree::BillingIntegration::Alipay)
-      payment = @order.payments.processing.find_or_create_by(amount: @order.outstanding_balance, payment_method: payment_method)
-      redirect_to alipay_full_service_url(@order, payment_method, identifier: payment.identifier)
       #if @order.update_attributes(alipay_payment_params) #it would create payments
       #  if params[:order][:coupon_code] and !params[:order][:coupon_code].blank? and @order.coupon_code.present?
       #    fire_event('spree.checkout.coupon_code_added', :coupon_code => @order.coupon_code)
@@ -172,14 +176,12 @@ module Spree
     end
 
     # TODO: we the code only supports "create_direct_pay_by_user" as of now (2014-11-14)
-    def alipay_full_service_url( order, alipay, identifier: nil)
-      #Rails.logger.debug "alipay gateway is configured to be #{alipay.inspect}"
-      raise ArgumentError, 'require Spree::BillingIntegration::Alipay' unless alipay.is_a? Spree::BillingIntegration::Alipay
-      #url = OffsitePayments::Integrations::Alipay.service_url+'?'
-      helper = OffsitePayments::Integrations::Alipay::Helper.new([order.number, identifier].join('_'), alipay.preferred_partner, key: alipay.preferred_sign)
+    def alipay_full_service_url( payment, payment_method )
+      order = payment.order
+      helper = OffsitePayments::Integrations::Alipay::Helper.new(create_out_trade_no(payment), payment_method.preferred_partner, key: payment_method.preferred_sign)
       #Rails.logger.debug "helper is #{helper.inspect}"
 
-      if alipay.preferred_using_direct_pay_service
+      if payment_method.preferred_using_direct_pay_service
         helper.total_fee order.total
         helper.service OffsitePayments::Integrations::Alipay::Helper::CREATE_DIRECT_PAY_BY_USER
       else
@@ -188,11 +190,13 @@ module Spree
         helper.logistics :type=> 'EXPRESS', :fee=>order.adjustment_total, :payment=>'BUYER_PAY' 
         helper.service OffsitePayments::Integrations::Alipay::Helper::TRADE_CREATE_BY_BUYER
       end
-      helper.seller :email => alipay.preferred_email
+      helper.seller :email => payment_method.preferred_email
       #url_for is controller instance method, so we have to keep this method in controller instead of model
       #Rails.logger.debug "helper is #{helper.inspect}"
-      helper.notify_url url_for(:only_path => false, :action => 'alipay_notify')
-      helper.return_url url_for(:only_path => false, :action => 'alipay_done')
+      #helper.notify_url url_for(only_path: false, controller: 'tenpay_status', action: 'alipay_notify')
+      #helper.return_url url_for(only_path: false, controller: 'tenpay_status', action: 'alipay_done')
+      helper.notify_url url_for(only_path: false, action: 'alipay_notify')
+      helper.return_url url_for(only_path: false, action: 'alipay_done')
       helper.body order.products.collect(&:name).to_s #String(400) 
       helper.charset "utf-8"
       helper.payment_type 1
@@ -207,6 +211,10 @@ module Spree
       url.query = ( Rack::Utils.parse_nested_query(url.query).merge(helper.form_fields) ).to_query
       #Rails.logger.debug "full_service_url to be encoded is #{url.to_s}"
       url.to_s
+    end
+
+    def create_out_trade_no(payment)
+      "#{payment.order.number}_#{payment.identifier}"
     end
 
     def alipay_pay_by_billing_integration?
