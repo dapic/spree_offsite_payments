@@ -24,17 +24,16 @@ module Spree
 
     def tenpay_full_service_url( payment, payment_method )
       order = payment.order
-      helper = OffsitePayments::Integrations::Tenpay::Helper.new(create_out_trade_no(payment), payment_method.preferred_partner, key: payment_method.preferred_partner_key)
+      helper = ::OffsitePayments::Integrations::Tenpay::Helper.new(create_out_trade_no(payment), payment_method.preferred_partner, key: payment_method.preferred_partner_key)
       helper.total_fee (( order.total * 100).to_i)
       helper.body "#{order.products.collect(&:name).join(';').to_s}" #String(400) 
-      helper.notify_url url_for(only_path: false, controller: :tenpay_status, action: 'tenpay_notify')
-      helper.return_url url_for(only_path: false, controller: :tenpay_status, action: 'tenpay_done')
-      #helper.partner tenpay.preferred_partner
+      helper.return_url return_url(method: :tenpay)
+      helper.notify_url notify_url(method: :tenpay)
       helper.charset "utf-8"
       helper.payment_type 1
       helper.remote_ip request.remote_ip
       helper.sign
-      url = URI.parse(OffsitePayments::Integrations::Tenpay.service_url)
+      url = URI.parse(::OffsitePayments::Integrations::Tenpay.service_url)
       url.query = ( Rack::Utils.parse_nested_query(url.query).merge(helper.form_fields) ).to_query
       Rails.logger.debug "full_service_url to be encoded is #{url.to_s}"
       url.to_s
@@ -43,10 +42,6 @@ module Spree
     private
     def create_out_trade_no( payment )
       "#{payment.order.number}_#{payment.identifier}"
-    end
-
-    def parse_out_trade_no(out_trade_no)
-      return out_trade_no.split('_')
     end
 
   end

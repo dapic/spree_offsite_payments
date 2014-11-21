@@ -1,7 +1,10 @@
 zh-CN:
   spree:
-    order_processed_successfully: 订单处理成功
-    order_processed_already: 此订单已处理过
+    payment_processed_already: 此次付款已处理过
+    payment_notify_shows_different_amount: "支付记录显示的金额（￥%{expected}）与支付通知显示的金额（￥%{actual}）不一致"
+    payment_failure: 支付失败
+    payment_success_but_order_incomplete: 此次付款成功，但订单尚未支付完成
+    order_completed: 订单处理成功
     invalid_alipay_request: 异常的支付宝请求
     illegal_sign_in_request: 不合法的支付宝请求
     payment_log_message_label: 记录

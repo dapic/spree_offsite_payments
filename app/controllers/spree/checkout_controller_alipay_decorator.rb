@@ -12,7 +12,7 @@ module Spree
       if @order.completed?  
         flash.notice = Spree.t(:order_processed_already)
         redirect_to completion_route
-      elsif @return.is_payment_complete?
+      elsif @return.success?
         # TODO: verify this!!!
         # @payment should have already been set. if it's nil, then we find it here
         @payment ||= @order.payments.where(:state => ['processing', 'pending', 'checkout'], payment_method: @payment_method ).first
@@ -44,7 +44,7 @@ module Spree
     # triggered when Alipay sends a notification request unbeknownst to the user, from Alipay server to our server
     def alipay_notify
       if valid_alipay_notification?(@notification,@order.payments.first.payment_method.preferred_partner)
-        if @notification.is_payment_complete?
+        if @notification.success?
           @order.payment.first.complete!
         else
           @order.payment.first.failure!
@@ -121,17 +121,17 @@ module Spree
       case request.path_parameters[:action]
       when 'alipay_notify'
         begin
-          @notification = OffsitePayments::Integrations::Alipay.notification(request.raw_post, key: @payment_method.preferred_sign)
+          @notification = ::OffsitePayments::Integrations::Alipay.notification(request.raw_post, key: @payment_method.preferred_sign)
           @notification.acknowledge
-        rescue RuntimeError, OffsitePayments::ActionViewHelperError => e
+        rescue RuntimeError, ::OffsitePayments::ActionViewHelperError => e
           Rails.logger.warn("#{e} in request: #{request.env['REQUEST_URI']}")
           render text: 'failure'
         end
       when 'alipay_done'
         begin
-          @return = OffsitePayments::Integrations::Alipay.return(request.query_string, key: @payment_method.preferred_sign) 
+          @return = ::OffsitePayments::Integrations::Alipay.return(request.query_string, key: @payment_method.preferred_sign) 
           @return.acknowledge
-        rescue RuntimeError, OffsitePayments::ActionViewHelperError => e
+        rescue RuntimeError, ::OffsitePayments::ActionViewHelperError => e
           Rails.logger.warn("#{e} in request: #{request.env['REQUEST_URI']}")
           flash[:error] = Spree.t('invalid_alipay_request')
           redirect_to spree.root_path
@@ -178,25 +178,27 @@ module Spree
     # TODO: we the code only supports "create_direct_pay_by_user" as of now (2014-11-14)
     def alipay_full_service_url( payment, payment_method )
       order = payment.order
-      helper = OffsitePayments::Integrations::Alipay::Helper.new(create_out_trade_no(payment), payment_method.preferred_partner, key: payment_method.preferred_sign)
+      helper = ::OffsitePayments::Integrations::Alipay::Helper.new(create_out_trade_no(payment), payment_method.preferred_partner, key: payment_method.preferred_sign)
       #Rails.logger.debug "helper is #{helper.inspect}"
 
       if payment_method.preferred_using_direct_pay_service
         helper.total_fee order.total
-        helper.service OffsitePayments::Integrations::Alipay::Helper::CREATE_DIRECT_PAY_BY_USER
+        helper.service ::OffsitePayments::Integrations::Alipay::Helper::CREATE_DIRECT_PAY_BY_USER
       else
         helper.price order.item_total
         helper.quantity 1
         helper.logistics :type=> 'EXPRESS', :fee=>order.adjustment_total, :payment=>'BUYER_PAY' 
-        helper.service OffsitePayments::Integrations::Alipay::Helper::TRADE_CREATE_BY_BUYER
+        helper.service ::OffsitePayments::Integrations::Alipay::Helper::TRADE_CREATE_BY_BUYER
       end
       helper.seller :email => payment_method.preferred_email
       #url_for is controller instance method, so we have to keep this method in controller instead of model
       #Rails.logger.debug "helper is #{helper.inspect}"
       #helper.notify_url url_for(only_path: false, controller: 'tenpay_status', action: 'alipay_notify')
       #helper.return_url url_for(only_path: false, controller: 'tenpay_status', action: 'alipay_done')
-      helper.notify_url url_for(only_path: false, action: 'alipay_notify')
-      helper.return_url url_for(only_path: false, action: 'alipay_done')
+      #helper.notify_url url_for(only_path: false, controller: 'alipay', action: 'notify')
+      #helper.return_url url_for(only_path: false, controller: 'alipay', action: 'done')
+      helper.return_url return_url(method: :alipay)
+      helper.notify_url notify_url(method: :alipay)
       helper.body order.products.collect(&:name).to_s #String(400) 
       helper.charset "utf-8"
       helper.payment_type 1
@@ -204,7 +206,7 @@ module Spree
       Rails.logger.debug "order--- #{order.inspect}"
       Rails.logger.debug "signing--- #{helper.inspect}"
       helper.sign
-      url = URI.parse(OffsitePayments::Integrations::Alipay.service_url)
+      url = URI.parse(::OffsitePayments::Integrations::Alipay.service_url)
       #Rails.logger.debug "query from url #{url.query}"
       #Rails.logger.debug "query from url parsed #{Rack::Utils.parse_nested_query(url.query).inspect}"
       #Rails.logger.debug "helper fields #{helper.form_fields.to_query}"

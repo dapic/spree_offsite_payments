@@ -8,9 +8,12 @@ module Spree
     preference :test_mode, :boolean, :default => true
      
     def provider_class
-      OffsitePayments::Integrations::Alipay
+      ::OffsitePayments::Integrations::Alipay
     end
     
+    def key
+      preferred_sign
+    end
         
   end
 end
