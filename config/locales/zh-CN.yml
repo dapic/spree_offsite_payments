@@ -8,3 +8,4 @@ zh-CN:
     invalid_alipay_request: 异常的支付宝请求
     illegal_sign_in_request: 不合法的支付宝请求
     payment_log_message_label: 记录
+    mch_id: 商户号

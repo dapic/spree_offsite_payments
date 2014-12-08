@@ -59,7 +59,8 @@ module Spree
     
     def alipay_checkout_hook
       #TODO support step confirmation 
-      return unless params['state'] == 'payment' # @order.next_step_complete?
+      #return unless params['state'] == 'payment' # @order.next_step_complete?
+      return unless @order.next_step_complete?
       payment_method = PaymentMethod.find(params[:order][:payments_attributes].first[:payment_method_id])
       Rails.logger.debug ("payment_method_id is --> #{params[:order][:payments_attributes].first[:payment_method_id]}")
       Rails.logger.debug ("payment_method is --> #{payment_method.name}")

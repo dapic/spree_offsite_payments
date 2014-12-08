@@ -19,6 +19,7 @@ Gem::Specification.new do |s|
 
   s.add_dependency 'spree_core', '~> 2.3.1'
   s.add_dependency 'offsite_payments'
+  s.add_dependency 'rqrcode-rails3'
 
   s.add_development_dependency 'capybara', '~> 2.1'
   s.add_development_dependency 'coffee-rails'

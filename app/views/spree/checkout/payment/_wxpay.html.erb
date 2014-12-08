@@ -1,0 +1,3 @@
+<%= image_tag "billing_integrations/wxpay.png" %>
+<br/>
+<%= image_tag("#{payment_qrcode_url(payment_id: payment.id)}.png", size: "200x200") if payment %>

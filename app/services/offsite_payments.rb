@@ -3,30 +3,44 @@ module Spree::OffsitePayments
   class UnVerifiableNotifyError < RuntimeError; end
   class InvalidOutTradeNoError < RuntimeError; end
   class PaymentNotFoundError < RuntimeError; end
-  #class PaymentFailureError     < RuntimeError; end
 
   # TODO: add object caching later
   def self.load_for(request)
     Processor.new(request)
   end
 
+  def self.create_out_trade_no( payment )
+    "#{payment.order.number}_#{payment.identifier}"
+  end
+
+  # should return [ordernumber, payment_identifier]
+  def self.parse_out_trade_no(out_trade_no)
+    out_trade_no.split('_').tap { |oid, pid| raise InvalidOutTradeNoError, "Invalid out_trade_no #{out_trade_no}" unless pid }
+  end
+
+
   class Processor
     attr_accessor :log
-    attr_reader :order
+    attr_reader :order, :payment
     def initialize(request)
       @request = request
       load_provider
     end
 
     def process
+      @notify = ''
       parse_request
       verify_notify
-      process_payment
-      process_order
-    end
-
-    def order
-      @order ||= @payment.order
+      result = catch(:done) {
+        process_payment
+        process_order
+      }
+      log.debug("@notify is #{ @notify.inspect}")
+      if @notify.respond_to?(:api_response) 
+        @notify.api_response(:success)
+      else
+        result
+      end
     end
 
     private
@@ -34,22 +48,17 @@ module Spree::OffsitePayments
       payment_method_name = Spree::PaymentMethod.providers
       .find {|p| p.parent.name.demodulize == 'BillingIntegration' &&
              p.name.demodulize.downcase == @request.params[:method].downcase }
-      #.select {|p| p.parent.name.demodulize == 'BillingIntegration' 
-      #}.map(&:new)
-      #.find {|p| p.method_type == @request.parameters[:payment_method] }
       @payment_method = Spree::PaymentMethod.find_by(type: payment_method_name)
       @payment_provider = @payment_method.provider_class #this is actually a module
-    rescue NoMethodError
-      #log.warn("The payment method '#{@request.path_parameters[:controller]}' is not supported. full request is :#{@request.url}")
-      puts("The payment method '#{@request.path_parameters[:controller]}' is not supported. full request is :#{@request.url}")
+      @payment_provider.logger ||= log
     end
-   
+
     def parse_request
-      log.debug("pm is #{@payment_method.inspect}")
-      log.debug("key is #{@payment_method.key}")
+      payload = @request.post? ? @request.raw_post : @request.query_string
       @notify = @payment_provider.send(@request.path_parameters[:action].to_sym, 
-                                      @request.query_string, key: @payment_method.key)
+                                       payload, key: @payment_method.key)
     rescue RuntimeError => e
+      log.debug("request is: #{@request.inspect}")
       raise InvalidRequestError, "Error when processing #{@request.url}. \n#{e.message}"
     end
 
@@ -66,8 +75,8 @@ module Spree::OffsitePayments
     end
 
     def load_payment
-      @payment = Spree::Payment.find_by(identifier: parse_out_trade_no(@notify.out_trade_no)[1]) ||
-        raise(PaymentNotFoundError, "Could not find payment with identifier #{parse_out_trade_no(@notify.out_trade_no)[1]}")
+      @payment = Spree::Payment.find_by(identifier: Spree::OffsitePayments.parse_out_trade_no(@notify.out_trade_no)[1]) ||
+        raise(PaymentNotFoundError, "Could not find payment with identifier #{Spree::OffsitePayments.parse_out_trade_no(@notify.out_trade_no)[1]}")
       @order = @payment.order
     end
 
@@ -82,9 +91,12 @@ module Spree::OffsitePayments
     end
 
     def update_payment_amount
-      #log.warn("payment return shows different amount than was recorded in the payment. it should be #{@payment.amount} but is actually #{@notify.amount}") unless @payment.amount.to_money(@payment.currency) == @notify.amount
       log.warn(Spree.t(:payment_notify_shows_different_amount, expected: @payment.amount, actual: @notify.amount )) unless @payment.amount.to_money(@payment.currency) == @notify.amount
       @payment.amount = @notify.amount
+    end
+
+    def update_payment_tx_id
+      @payment.foreign_transaction_id = @notify.transaction_id if @notify.transaction_id
     end
 
     def update_payment_status
@@ -93,27 +105,15 @@ module Spree::OffsitePayments
     end
 
     def process_order
-      if @order.outstanding_balance >= 0
+      if @order.outstanding_balance > 0
         throw :done, :payment_success_but_order_incomplete
       else
         #TODO: The following logic need to be revised
         @order.update_attributes(:state => "complete", :completed_at => Time.now) 
         @order.finalize!
-        throw :done, :order_completed
+        throw :done, :order_completed 
       end
     end
 
-    # should return [ordernumber, payment_identifier]
-    def parse_out_trade_no(out_trade_no)
-      out_trade_no.split('_').tap { |oid, pid| raise InvalidOutTradeNoError, "Invalid out_trade_no #{out_trade_no}" unless pid }
-    end
-#    def load_data
-#      ordernumber, payment_identifier = parse_out_trade_no(@notify.out_trade_no)
-#      @payment = Payment.find_by(identifier: payment_identifier)
-#      @order = @payment.order
-#    end
-
   end
 end
-
-
