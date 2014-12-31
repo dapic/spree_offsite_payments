@@ -91,7 +91,7 @@ module Spree::OffsitePayments
     end
 
     def update_payment_amount
-      log.warn(Spree.t(:payment_notify_shows_different_amount, expected: @payment.amount, actual: @notify.amount )) unless @payment.amount.to_money(@payment.currency) == @notify.amount
+      log.warn(Spree.t(:payment_notify_shows_different_amount, expected: @payment.amount, actual: @notify.amount )) unless @payment.amount == @notify.amount
       @payment.amount = @notify.amount
     end
 
