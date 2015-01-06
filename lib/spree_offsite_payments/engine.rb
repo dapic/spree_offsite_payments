@@ -11,8 +11,11 @@ module SpreeOffsitePayments
     end
 
     def self.activate
-      Dir.glob(File.join(File.dirname(__FILE__), '../../app/**/*_decorator.rb')) do |c|
-        Rails.configuration.cache_classes ? require(c) : load(c)
+      #Explicitly setting the order here is to make sure models and services are loaded before controllers
+      %w(models services *).each do |partial_path|
+        Dir.glob(File.join(File.dirname(__FILE__), '../../app/', partial_path, '/**/*.rb')) do |c|
+          Rails.configuration.cache_classes ? require(c) : load(c)
+        end
       end
     end
 
