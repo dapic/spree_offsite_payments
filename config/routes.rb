@@ -13,4 +13,5 @@ Spree::Core::Engine.routes.draw do
   match '/payment/*method/notify', to: 'offsite_payments_status#notification', as: :notify, via: [:get, :post]
 
   match '/payment/:payment_id/qrcode', to: 'checkout#payment_qrcode', as: :payment_qrcode, via: :get
+  match '/payment/wxpay/jsapi/:payment_id', to: 'checkout#wcpay_code', as: :wcpay_code, via: :get
 end
