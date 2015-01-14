@@ -20,6 +20,8 @@ Gem::Specification.new do |s|
   s.add_dependency 'spree_core', '~> 2.4'
   s.add_dependency 'offsite_payments'
   s.add_dependency 'rqrcode-rails3'
+  s.add_runtime_dependency 'weixin_authorize'
+  s.add_runtime_dependency 'mini_magick'
 
   s.add_development_dependency 'capybara', '~> 2.1'
   s.add_development_dependency 'coffee-rails'
@@ -31,4 +33,5 @@ Gem::Specification.new do |s|
   s.add_development_dependency 'selenium-webdriver'
   s.add_development_dependency 'simplecov'
   s.add_development_dependency 'sqlite3'
+  s.add_development_dependency 'guard-rspec'
 end
