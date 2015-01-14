@@ -32,7 +32,10 @@ require 'spree/testing_support/factories'
 require 'spree/testing_support/url_helpers'
 
 # Requires factories defined in lib/spree_offsite_payments/factories.rb
-require 'spree_offsite_payments/factories'
+require 'factory_girl'
+Dir["#{File.dirname(__FILE__)}/factories/**"].each do |f|
+      require File.expand_path(f)
+end
 
 RSpec.configure do |config|
   config.include FactoryGirl::Syntax::Methods
@@ -67,6 +70,13 @@ RSpec.configure do |config|
   config.before :suite do
     DatabaseCleaner.strategy = :transaction
     DatabaseCleaner.clean_with :truncation
+    begin
+      DatabaseCleaner.start
+      # TODO: linting doesn't pass yet. these are factories defined in Spree Core test_support, and it's takong too long
+    #  FactoryGirl.lint
+    ensure 
+      DatabaseCleaner.clean
+    end 
   end
 
   # Before each spec check if it is a Javascript test and switch between using database transactions or not where necessary.
