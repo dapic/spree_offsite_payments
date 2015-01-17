@@ -10,21 +10,19 @@ module Spree
       return unless params['state'] == 'payment' && is_wxpay?  # @order.next_step_complete?
       case request.user_agent
       when /MicroMessenger/ #weixin embedded browser
-      Rails.logger.info("#{__FILE__}-#{__LINE__}")
-      retrieve_payment(:jsapi)
         handle_weixin_client_payment
       else
-      retrieve_payment(:native)
         handle_web_client_payment
       end
     end
 
     def handle_weixin_client_payment
-      Rails.logger.info("#{__FILE__}-#{__LINE__}")
+      retrieve_payment(:jsapi)
       redirect_to service_manager.get_authorize_url( wcpay_code_url(payment_id: @payment.id)) and return;
     end
 
     def handle_web_client_payment
+      retrieve_payment(:native)
       begin
         @payment.payment_url = service_manager.get_payment_url(@payment, request )
         @payment.save!
@@ -41,23 +39,16 @@ module Spree
 
     # assuming @order is set
     def retrieve_payment(current_api)
-          Rails.logger.info("#{__FILE__}-#{__LINE__} ")
       existing_payment = @order.payments.processing.find_by(amount: @order.outstanding_balance, payment_method: @payment_method)
-          Rails.logger.info("#{__FILE__}-#{__LINE__} ")
       if existing_payment 
-          Rails.logger.info("#{__FILE__}-#{__LINE__} ")
         case 
-        when current_api == :jsapi # && existing_payment.payment_url.present?
-          Rails.logger.info("#{__FILE__}-#{__LINE__} voiding #{existing_payment.identifier} since it is for qrcode")
+        when current_api == :jsapi # Always create a new payment for jsapi
           existing_payment.void!
         when current_api == :native && existing_payment.prepay_id.present?
-          Rails.logger.info("#{__FILE__}-#{__LINE__} voiding #{existing_payment.identifier} since it is for H5")
           existing_payment.void!
         end
       else
-          Rails.logger.info("#{__FILE__}-#{__LINE__} no existing")
       end
-          Rails.logger.info("#{__FILE__}-#{__LINE__} ")
       @payment = @order.payments.processing.find_or_create_by(amount: @order.outstanding_balance, payment_method: @payment_method)
     end
 
@@ -68,9 +59,7 @@ module Spree
 
     # this is the redirect back from Wxpay H5 authorization URL
     def wcpay_code
-      Rails.logger.info("#{__FILE__}-#{__LINE__}")
       access_auth_result = service_manager.get_client_openid(params['code'])
-      Rails.logger.info("#{__FILE__}-#{__LINE__} #{access_auth_result.inspect}")
       @payment = Spree::Payment.find(params[:payment_id])
       @payment.prepay_id = service_manager.get_prepay_id(@payment, request, access_auth_result.result[:openid] )
       @payment.save!
