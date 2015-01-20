@@ -91,8 +91,11 @@ module Spree::OffsitePayments
     end
 
     def update_payment_amount
-      log.warn(Spree.t(:payment_notify_shows_different_amount, expected: @payment.amount, actual: @notify.amount )) unless @payment.amount == @notify.amount
-      @payment.amount = @notify.amount
+      return unless @notify.respond_to?(:amount)
+      unless @payment.amount == @notify.amount
+        log.warn(Spree.t(:payment_notify_shows_different_amount, expected: @payment.amount, actual: @notify.amount ))
+        @payment.amount = @notify.amount
+      end
     end
 
     def update_payment_tx_id
