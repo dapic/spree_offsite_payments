@@ -45,9 +45,7 @@ module Spree::OffsitePayments
 
     private
     def load_provider
-      payment_method_name = Spree::PaymentMethod.providers
-      .find {|p| p.parent.name.demodulize == 'BillingIntegration' &&
-             p.name.demodulize.downcase == @request.params[:method].downcase }
+      payment_method_name = "Spree::BillingIntegration::#{@request.params[:method].camelize}"
       @payment_method = Spree::PaymentMethod.find_by(type: payment_method_name)
       @payment_provider = @payment_method.provider_class #this is actually a module
       @payment_provider.logger ||= log
@@ -68,6 +66,7 @@ module Spree::OffsitePayments
 
     def process_payment
       load_payment
+      ensure_notify_acknowledged
       ensure_payment_not_processed
       create_payment_log_entry
       update_payment_amount 
@@ -78,6 +77,12 @@ module Spree::OffsitePayments
       @payment = Spree::Payment.find_by(identifier: Spree::OffsitePayments.parse_out_trade_no(@notify.out_trade_no)[1]) ||
         raise(PaymentNotFoundError, "Could not find payment with identifier #{Spree::OffsitePayments.parse_out_trade_no(@notify.out_trade_no)[1]}")
       @order = @payment.order
+    end
+
+    def ensure_notify_acknowledged
+      @notify.acknowledge
+    rescue SecurityError => e
+      throw :done, :notify_not_acknolwedgable
     end
 
     def ensure_payment_not_processed

@@ -7,6 +7,10 @@ module Spree
     def provider_class
       ::OffsitePayments::Integrations::AlipayWap
     end
+    
+    def key
+      preferred_key
+    end
         
   end
 end

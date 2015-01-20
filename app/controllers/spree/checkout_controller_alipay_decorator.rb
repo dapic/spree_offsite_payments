@@ -67,15 +67,8 @@ module Spree
       return unless Spree::BillingIntegration::Alipay == payment_method.class
 
       payment = @order.payments.processing.find_or_create_by(amount: @order.outstanding_balance, payment_method: payment_method)
-
-      case request.user_agent
-        when /Mobile/
-          puts "mobile"
-          # @payment.payment_url = service_manager.get_request_token(@payment, request )
-          redirect_to service_manager.get_auth_and_excecute_url(@payment, request ) and return
-        else
-          redirect_to alipay_full_service_url(payment, payment_method) and return
-      end
+      redirect_to alipay_full_service_url(payment, payment_method) and return
+    end
 
       #return unless params[:order][:payments_attributes].present?
 
@@ -116,13 +109,8 @@ module Spree
       #          #Rails.logger.debug "--->before alipay_handle_billing_integration"
       #          alipay_handle_billing_integration
       #        end
-    end
 
     private
-
-    def service_manager
-      @@service_manager ||= Spree::OffsitePayments::AlipayWap::Manager.new()
-    end
 
     # This is put at the front of the filter chain for "return" and "notification" requests
     # Loading order is after this step so we have to get the payment_method by class name, instead of

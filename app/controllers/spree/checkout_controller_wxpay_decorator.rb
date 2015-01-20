@@ -7,7 +7,7 @@ module Spree
     # which would go to the "update" action in checkout controller
     def wxpay_checkout_hook
       #TODO support step confirmation 
-      return unless params['state'] == 'payment' && is_wxpay?  # @order.next_step_complete?
+      return unless (params['state'] == 'payment' && is_wxpay?) # @order.next_step_complete?
       case request.user_agent
       when /MicroMessenger/ #weixin embedded browser
         handle_weixin_client_payment
