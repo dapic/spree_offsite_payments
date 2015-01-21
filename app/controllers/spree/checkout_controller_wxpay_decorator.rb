@@ -16,6 +16,7 @@ module Spree
       end
     end
 
+    private 
     def handle_weixin_client_payment
       retrieve_payment(:jsapi)
       redirect_to service_manager.get_authorize_url( wcpay_code_url(payment_id: @payment.id)) and return;
@@ -79,7 +80,6 @@ module Spree
       end
     end
 
-    private 
     def service_manager
       @@service_manager ||= Spree::OffsitePayments::Wxpay::Manager.new()
     end
