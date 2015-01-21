@@ -97,9 +97,11 @@ module Spree::OffsitePayments
 
     def update_payment_amount
       return unless @notify.respond_to?(:amount)
-      unless @payment.amount == @notify.amount
+      # Payment.amount is a BigNum and @notify.amount is an instance of Money
+      unless @notify.amount == Money.new(@payment.amount * 100, @payment.currency)
         log.warn(Spree.t(:payment_notify_shows_different_amount, expected: @payment.amount, actual: @notify.amount ))
-        @payment.amount = @notify.amount
+        @payment.amount = @notify.amount.amount
+        @payment.currency = @notify.amount.currency
       end
     end
 
