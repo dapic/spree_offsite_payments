@@ -7,7 +7,7 @@ module Spree
     # which would go to the "update" action in checkout controller
     def tenpay_checkout_hook
       #TODO support step confirmation 
-      return unless ( @order.next_step_complete? && is_alipay? )
+      return unless ( @order.next_step_complete? && is_tenpay? )
       @payment = @order.payments.processing.find_or_create_by(amount: @order.outstanding_balance, payment_method: @payment_method)
       redirect_to tenpay_full_service_url and return
     end

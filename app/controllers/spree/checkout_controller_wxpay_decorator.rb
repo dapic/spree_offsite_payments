@@ -16,6 +16,28 @@ module Spree
       end
     end
 
+    # this is the redirect back from Wxpay H5 authorization URL
+    def wcpay_code
+      access_auth_result = service_manager.get_client_openid(params['code'])
+      @payment = Spree::Payment.find(params[:payment_id])
+      @payment.prepay_id = service_manager.get_prepay_id(@payment, request, access_auth_result.result[:openid] )
+      @payment.save!
+      @wcpay = service_manager.get_wcpay_request_payload(@payment.prepay_id)
+      @goto_page_when_paid = spree.order_path(@payment.order)
+      render :edit
+    end
+
+    def payment_qrcode
+      @payment_url = Payment.find(params[:payment_id]).payment_url
+      respond_to do |format|
+        format.html { render qrcode: @payment_url }
+        format.svg  { render :qrcode => @payment_url, :level => :l, :unit => 10 }
+        format.png  { render :qrcode => @payment_url }
+        format.gif  { render :qrcode => @payment_url }
+        format.jpeg { render :qrcode => @payment_url }
+      end
+    end
+
     private 
     def handle_weixin_client_payment
       retrieve_payment(:jsapi)
@@ -56,28 +78,6 @@ module Spree
     def is_wxpay?
       @payment_method = PaymentMethod.find(params[:order][:payments_attributes].first[:payment_method_id])
       Spree::BillingIntegration::Wxpay == @payment_method.class
-    end
-
-    # this is the redirect back from Wxpay H5 authorization URL
-    def wcpay_code
-      access_auth_result = service_manager.get_client_openid(params['code'])
-      @payment = Spree::Payment.find(params[:payment_id])
-      @payment.prepay_id = service_manager.get_prepay_id(@payment, request, access_auth_result.result[:openid] )
-      @payment.save!
-      @wcpay = service_manager.get_wcpay_request_payload(@payment.prepay_id)
-      @goto_page_when_paid = spree.order_path(@payment.order)
-      render :edit
-    end
-
-    def payment_qrcode
-      @payment_url = Payment.find(params[:payment_id]).payment_url
-      respond_to do |format|
-        format.html { render qrcode: @payment_url }
-        format.svg  { render :qrcode => @payment_url, :level => :l, :unit => 10 }
-        format.png  { render :qrcode => @payment_url }
-        format.gif  { render :qrcode => @payment_url }
-        format.jpeg { render :qrcode => @payment_url }
-      end
     end
 
     def service_manager
