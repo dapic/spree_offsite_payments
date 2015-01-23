@@ -2,7 +2,7 @@
 #require 'services/offsite_payments'
 module Spree
   class OffsitePaymentsStatusController < ApplicationController
-    before_action :load_processor
+    before_action :load_processor, except: :status_update
     skip_before_action :verify_authenticity_token, only: :notification
 
     rescue_from Spree::OffsitePayments::InvalidRequestError,
@@ -43,14 +43,51 @@ module Spree
       case result
       when ::OffsitePayments::Integrations::Wxpay::ApiResponse::NotificationResponse
         logger.info "responding with xml: #{result.to_xml}"
+        logger.info "#{Spree.t(result)}: #{@processor.order.number}"
+        publish_internal_update(@processor.payment)
         render xml: result
       when Symbol 
-        logger.info "#{Spree.t(result)}: #{@processor.order.number}"
         render text: 'success'
       else
         logger.error "Unexpected result #{result} of type #{result.class}: #{@processor.order.number}"
         render text: 'success'
       end
+    end
+
+    def publish_internal_update(payment)
+      $redis||=Redis.new
+      $redis.publish('payment.update', "payment_paid:#{payment.id}")
+    end
+
+    include ActionController::Live
+    def status_update
+      response.headers['Content-Type'] = 'text/event-stream'
+      redis = Redis.new
+      redis.subscribe('payment.update', 'heartbeat') do |pu|
+        pu.message do |channel, message|
+          case channel
+          when 'heartbeat'
+            response.stream.write("event: heart_beat\n")
+            response.stream.write("data: #{message}\n\n")
+          when 'payment.update'
+            payment_id = message.match(/payment_paid:(.*)/)[1]
+            logger.debug("payment update received for #{payment_id}")
+            if payment_id == request.params['payment_id']
+              logger.debug("sending update to client for payment")
+              response.stream.write("event: order_paid\n")
+              response.stream.write("data: #{payment_id}\n\n")
+            else 
+              logger.debug("payment update received for #{payment_id}")
+            end
+          end
+        end
+      end
+      render nothing: true
+    rescue IOError
+      logger.warn("Client connection closed")
+    ensure
+      redis.quit
+      response.stream.close
     end
 
     private

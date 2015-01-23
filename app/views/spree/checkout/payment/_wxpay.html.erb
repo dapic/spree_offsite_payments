@@ -31,5 +31,16 @@
       <% end %>
   <% else %>
     <%= image_tag("#{payment_qrcode_url(payment_id: payment.id)}.png", size: "200x200") if payment %>
+    <%= javascript_tag do %>
+      var onPaidEvent = function() {
+      var source = new EventSource('<%= payment_status_path(payment_id: payment.id) %>');
+
+      source.addEventListener('order_paid', function(e) {
+      // console.log('<%= spree.order_path(order.number) %>');
+      window.location = '<%= spree.order_path(order.number) %>';
+      });
+      };
+      onPaidEvent();
+    <% end %>
   <% end %>
 <% end %>
