@@ -6,7 +6,11 @@ module Spree::OffsitePayments
 
   # TODO: add object caching later
   def self.load_for(request)
-    Processor.new(request)
+    unless request.params[:method] == 'ubl'
+      Processor.new(request)
+    else
+      UblProcessor.new(request)
+    end
   end
 
   def self.create_out_trade_no( payment )
@@ -48,7 +52,7 @@ module Spree::OffsitePayments
       payment_method_name = "Spree::BillingIntegration::#{@request.params[:method].camelize}"
       @payment_method = Spree::PaymentMethod.find_by(type: payment_method_name)
       @payment_provider = @payment_method.provider_class #this is actually a module
-      @payment_provider.logger ||= log
+      #@payment_provider.logger ||= log
     end
 
     def parse_request
@@ -110,7 +114,15 @@ module Spree::OffsitePayments
     end
 
     def update_payment_status
-      @notify.success? ? @payment.complete! : @payment.failure! 
+      if @payment.payment_method.auto_capture?
+        @payment.send(:handle_response, @notify, :complete, :failure)
+        if @notify.success?
+          @payment.capture_events.create!(amount: @notify.amount)
+        end
+        #@payment.complete!
+      else
+        @payment.send(:handle_response, @notify, :pend, :failure)
+      end
       throw :done, :payment_failure if @payment.failed?
     end
 

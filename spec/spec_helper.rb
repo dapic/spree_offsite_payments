@@ -1,3 +1,5 @@
+require "bundler/setup"
+require "spree_offsite_payments"
 # Run Coverage report
 require 'simplecov'
 SimpleCov.start do
@@ -94,3 +96,4 @@ RSpec.configure do |config|
   config.order = "random"
   config.expose_current_running_example_as :example
 end
+

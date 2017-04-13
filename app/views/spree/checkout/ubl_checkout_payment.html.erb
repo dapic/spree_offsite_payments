@@ -1,0 +1,19 @@
+<% payment_service_for @payment.id, "#{@order.number}",
+                      amount: @payment.amount, 
+                      currency: @payment.currency,
+                      auto_capture: @payment.payment_method.auto_capture?,
+                      return_url: spree.return_url(method: :ubl, identifier: @payment.id),
+                       service: :ubl,
+                       html: { id: 'payment-form'} do |service|
+  if service.errors.present?    
+    flash[:alert] = service.errors.join("<br/>").html_safe
+  else%>
+    <script>
+      $(document).ready(function() {
+        $('#payment-form').submit();
+      });  
+    </script>
+  <%end
+  #service.order @transaction_id
+%>
+<% end %>

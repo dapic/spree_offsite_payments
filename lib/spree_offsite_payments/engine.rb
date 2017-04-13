@@ -26,6 +26,7 @@ module SpreeOffsitePayments
       ActionView::Base.send(:include, OffsitePayments::ActionViewHelper)
 
       app.config.spree.payment_methods += [
+        Spree::BillingIntegration::UBL,
         Spree::BillingIntegration::Alipay,
         Spree::BillingIntegration::AlipayWap,
         Spree::BillingIntegration::Wxpay,

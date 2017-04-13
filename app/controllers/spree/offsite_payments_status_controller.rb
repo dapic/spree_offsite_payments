@@ -3,7 +3,7 @@
 module Spree
   class OffsitePaymentsStatusController < ApplicationController
     before_action :load_processor, except: :status_update
-    skip_before_action :verify_authenticity_token, only: :notification
+    skip_before_action :verify_authenticity_token, only: [:notification, :return]
 
     rescue_from Spree::OffsitePayments::InvalidRequestError,
                  Spree::OffsitePayments::UnVerifiableNotifyError,
@@ -15,25 +15,35 @@ module Spree
 
     def return
       result = @processor.process
-      logger.debug("received result of #{result.to_s} for payment #{@processor.payment.identifier} of order #{@processor.order.number}")
       #logger.debug("session contains: #{session.inspect}")
+      @order=@processor.order
+      @payment=Spree::Payment.find_by_id(params[:identifier]) if params[:identifier]
+      @order||= @payment.order if @payment
+      logger.debug("received result of #{result.to_s} for payment #{@payment.id} of order #{@order.number}")
+     
       case result
       when :payment_processed_already
         # if it's less than a minute ago, maybe it's processed by the "notification"
-        flash[:notice] = Spree.t(result) if ((Time.now - @processor.payment.updated_at) > 1.minute)
-        redirect_to spree.order_path(@processor.order)
+        flash[:notice] = "Payment Processed Already" if ((Time.now - @processor.payment.updated_at) > 1.minute)
+        redirect_to spree.order_path(@order)
       when :order_completed
-        flash[:notice] = Spree.t(result)
+        flash[:notice] = "Order Completed"
         #session[:order_id] = nil
-        redirect_to spree.order_path(@processor.order)
+        redirect_to spree.order_path(@order)
       when :payment_success_but_order_incomplete
-        flash[:warn] = Spree.t(result)
-        redirect_to edit_order_checkout_url(@processor.order, state: "payment")
+        flash[:warn] = "Payment success but order incomplete"
+        #redirect_to edit_order_checkout_url(@order, state: "payment")
+         redirect_to shop_checkout_state_url(shop_id: @order.shop.id, state: "payment")
       when :payment_failure
-        flash[:error] = Spree.t(result)
-        redirect_to edit_order_checkout_url(@processor.order, state: "payment")
+        unless @processor.response.errors.blank?
+          flash[:error] = @processor.response.errors.join("<br/>").html_safe
+        else
+          flash[:error] = "Payment failed"
+        end
+        #redirect_to edit_order_checkout_url(@order, state: "payment")
+        redirect_to shop_checkout_state_url(shop_id: @order.shop.id, state: "payment")
       else
-        redirect_to spree.order_path(@processor.order)
+        redirect_to spree.order_path(@order)
       end
     end
 
