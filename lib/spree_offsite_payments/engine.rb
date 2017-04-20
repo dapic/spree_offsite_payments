@@ -27,10 +27,7 @@ module SpreeOffsitePayments
 
       app.config.spree.payment_methods += [
         Spree::BillingIntegration::UBL,
-        Spree::BillingIntegration::Alipay,
-        Spree::BillingIntegration::AlipayWap,
-        Spree::BillingIntegration::Wxpay,
-        Spree::BillingIntegration::Tenpay
+        Spree::BillingIntegration::Wxpay
       ]
     end
   end

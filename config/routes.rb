@@ -3,8 +3,6 @@ Spree::Core::Engine.routes.draw do
     resource :checkout, :controller => 'checkout' do
       member do
         get :ubl_checkout_payment
-        get :alipay_checkout_payment
-        get :tenpay_checkout_payment
       end
     end
   end
