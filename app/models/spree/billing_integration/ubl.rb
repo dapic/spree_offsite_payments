@@ -3,7 +3,7 @@ module Spree
     preference :test_mode, :boolean, :default => true
      
     def provider_class
-      ::OffsitePayments::Integrations::UBL
+      ::OffsitePayments::Integrations::Ubl
     end
     
     def key

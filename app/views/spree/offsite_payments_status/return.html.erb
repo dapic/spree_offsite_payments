@@ -1,0 +1,28 @@
+<script type="text/javascript">
+   $( document ).ready(function() {
+    document.addEventListener("PaymentSuccess", function(e) {
+       console.log(e.detail); 
+    });
+    
+    document.addEventListener("PaymentFailure", function(e) {
+      console.log(e.detail); 
+    });
+      
+      
+      <%case @result%>
+      <%when :payment_processed_already %>
+        var event = new CustomEvent("PaymentSuccess", { detail: "<%=flash[:notice]%>" });
+      <%when :order_completed%>
+        var event = new CustomEvent("PaymentSuccess", { detail: "<%=flash[:notice]%>" });
+      <%when :payment_success_but_order_incomplete%>
+        var event = new CustomEvent("PaymentFailure", { detail: "<%=flash[:warn]%>" });
+      <%when :payment_failure%>
+        var event = new CustomEvent("PaymentFailure", { detail: "<%=flash[:error]%>" });
+      <%else%>
+        var event = new CustomEvent("PaymentSuccess", { detail: "PaymentSuccess" });
+      <%end%>
+      document.dispatchEvent(event);     
+      
+      });
+</script>
+

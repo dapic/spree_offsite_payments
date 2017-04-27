@@ -2,6 +2,7 @@
 #require 'services/offsite_payments'
 module Spree
   class OffsitePaymentsStatusController < ApplicationController
+    layout "spree/layouts/spree_offsite_payment"
     before_action :load_processor, except: :status_update
     skip_before_action :verify_authenticity_token, only: [:notification, :return]
 
@@ -14,26 +15,26 @@ module Spree
     end
 
     def return
-      result = @processor.process
+      @result = @processor.process
       #logger.debug("session contains: #{session.inspect}")
       @order=@processor.order
       @payment=Spree::Payment.find_by_id(params[:identifier]) if params[:identifier]
       @order||= @payment.order if @payment
-      logger.debug("received result of #{result.to_s} for payment #{@payment.id} of order #{@order.number}")
+      logger.debug("received result of #{@result.to_s} for payment #{@payment.id} of order #{@order.number}")
      
-      case result
+      case @result
       when :payment_processed_already
         # if it's less than a minute ago, maybe it's processed by the "notification"
         flash[:notice] = "Payment Processed Already" if ((Time.now - @processor.payment.updated_at) > 1.minute)
-        redirect_to spree.order_path(@order)
+        redirect_to spree.order_path(@order) if params[:caller]!="mobile"
       when :order_completed
         flash[:notice] = "Order Completed"
         #session[:order_id] = nil
-        redirect_to spree.order_path(@order)
+        redirect_to spree.order_path(@order) if params[:caller]!="mobile"
       when :payment_success_but_order_incomplete
         flash[:warn] = "Payment success but order incomplete"
         #redirect_to edit_order_checkout_url(@order, state: "payment")
-         redirect_to shop_checkout_state_url(shop_id: @order.shop.id, state: "payment")
+        redirect_to shop_checkout_state_url(shop_id: @order.shop.id, state: "payment") if params[:caller]!="mobile"
       when :payment_failure
         unless @processor.response.errors.blank?
           flash[:error] = @processor.response.errors.join("<br/>").html_safe
@@ -41,9 +42,9 @@ module Spree
           flash[:error] = "Payment failed"
         end
         #redirect_to edit_order_checkout_url(@order, state: "payment")
-        redirect_to shop_checkout_state_url(shop_id: @order.shop.id, state: "payment")
+         redirect_to shop_checkout_state_url(shop_id: @order.shop.id, state: "payment") if params[:caller]!="mobile"
       else
-        redirect_to spree.order_path(@order)
+         redirect_to spree.order_path(@order) if params[:caller]!="mobile"
       end
     end
 
@@ -51,11 +52,6 @@ module Spree
       result = @processor.process
       logger.debug("content_type::::::#{request.content_type}")
       case result
-      when ::OffsitePayments::Integrations::Wxpay::ApiResponse::NotificationResponse
-        logger.info "responding with xml: #{result.to_xml}"
-        logger.info "#{Spree.t(result)}: #{@processor.order.number}"
-        publish_internal_update(@processor.payment)
-        render xml: result
       when Symbol 
         render text: 'success'
       else

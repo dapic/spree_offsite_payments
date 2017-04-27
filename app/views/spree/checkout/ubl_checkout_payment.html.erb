@@ -1,8 +1,8 @@
-<% payment_service_for @payment.id, "#{@order.number}",
+<%  payment_service_for @payment.id, "#{@order.number}",
                       amount: @payment.amount, 
                       currency: @payment.currency,
                       auto_capture: @payment.payment_method.auto_capture?,
-                      return_url: spree.return_url(method: :ubl, identifier: @payment.id),
+                      return_url: spree.return_url(method: :ubl, identifier: @payment.id, caller: @caller),
                        service: :ubl,
                        html: { id: 'payment-form'} do |service|
   if service.errors.present?    
