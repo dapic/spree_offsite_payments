@@ -1,27 +1,23 @@
 <script type="text/javascript">
-   $( document ).ready(function() {
-    document.addEventListener("PaymentSuccess", function(e) {
-       console.log(e.detail); 
-    });
-    
-    document.addEventListener("PaymentFailure", function(e) {
-      console.log(e.detail); 
-    });
-      
+   $( document ).ready(function() {      
       
       <%case @result%>
       <%when :payment_processed_already %>
-        var event = new CustomEvent("PaymentSuccess", { detail: "<%=flash[:notice]%>" });
+        window.webkit.messageHandlers.howmuchApi.postMessage({'event': 'onPaymentSuccess', 'message': '<%=flash[:notice]%>'});
+        console.log("onPaymentSuccess");
       <%when :order_completed%>
-        var event = new CustomEvent("PaymentSuccess", { detail: "<%=flash[:notice]%>" });
+        window.webkit.messageHandlers.howmuchApi.postMessage({'event': 'onPaymentSuccess', 'message': '<%=flash[:notice]%>'});
+        console.log("onPaymentSuccess");
       <%when :payment_success_but_order_incomplete%>
-        var event = new CustomEvent("PaymentFailure", { detail: "<%=flash[:warn]%>" });
+        window.webkit.messageHandlers.howmuchApi.postMessage({'event': 'onPaymentFailure', 'message': '<%=flash[:warn]%>'});
+        console.log("onPaymentSuccess");
       <%when :payment_failure%>
-        var event = new CustomEvent("PaymentFailure", { detail: "<%=flash[:error]%>" });
+        window.webkit.messageHandlers.howmuchApi.postMessage({'event': 'onPaymentFailure', 'message': '<%=flash[:error]%>'});
+        console.log("onPaymentSuccess");
       <%else%>
-        var event = new CustomEvent("PaymentSuccess", { detail: "PaymentSuccess" });
-      <%end%>
-      document.dispatchEvent(event);     
+        window.webkit.messageHandlers.howmuchApi.postMessage({'event': 'onPaymentSuccess', 'message': 'PaymentSuccess'});
+        console.log("onPaymentSuccess");
+      <%end%>    
       
       });
 </script>
