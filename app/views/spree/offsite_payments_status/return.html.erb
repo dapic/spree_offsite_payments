@@ -1,7 +1,6 @@
 <script type="text/javascript">
    $( document ).ready(function() {      
-      
-      <% if !!howmuchApi %>
+       if(!!howmuchApi) {
           <%case @result%>
           <%when :payment_processed_already %>
             howmuchApi.postMessage('onPaymentSuccess', '<%=flash[:notice]%>');
@@ -19,7 +18,7 @@
             howmuchApi.postMessage('onPaymentSuccess', 'PaymentSuccess');
             console.log("onPaymentSuccess");
           <%end%>  
-      <%else%>
+        } else {
         <%case @result%>
         <%when :payment_processed_already %>
           window.webkit.messageHandlers.howmuchApi.postMessage({'event': 'onPaymentSuccess', 'message': '<%=flash[:notice]%>'});
@@ -37,7 +36,7 @@
           window.webkit.messageHandlers.howmuchApi.postMessage({'event': 'onPaymentSuccess', 'message': 'PaymentSuccess'});
           console.log("onPaymentSuccess");
         <%end%>  
-      <%end%>  
+        } 
       });
 </script>
 
