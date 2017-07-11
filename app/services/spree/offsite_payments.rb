@@ -6,10 +6,12 @@ module Spree::OffsitePayments
 
   # TODO: add object caching later
   def self.load_for(request)
-    unless request.params[:method] == 'ubl'
-      Processor.new(request)
-    else
+    if request.params[:method] == 'ubl'
       UblProcessor.new(request)
+    elsif request.params[:method] == 'easy_paisa'
+      EasyPaisaProcessor.new(request)
+    else
+      Processor.new(request)
     end
   end
 

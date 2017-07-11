@@ -1,0 +1,15 @@
+<%  payment_service_for @payment.id, "#{@payment.order.number}",
+                      authcode: @auth_code,
+                      return_url: spree.return_url(method: :easy_paisa, identifier: @payment.id, caller: @caller),
+                      service: :easy_paisa,
+                      html: { id: 'payment-form'} do |service|
+  if service.errors.present?    
+    flash[:alert] = service.errors.join("<br/>").html_safe
+  else%>
+    <script>
+      $(document).ready(function() {
+        $('#payment-form').submit();
+      });  
+    </script>
+  <%end%>
+<% end %>

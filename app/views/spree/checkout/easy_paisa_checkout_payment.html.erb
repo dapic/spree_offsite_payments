@@ -1,0 +1,23 @@
+<%  payment_service_for @payment.id, "#{@order.number}",
+                      amount: @payment.amount, 
+                      account_name: @payment.payment_method.store_id,
+                      currency: @payment.currency,
+                      auto_capture: @payment.payment_method.auto_capture?,
+                      credential2: "#{@order.user.email}",
+                      credential3: "0#{@order.user.get_verified_number.phony_formatted.gsub(' ', '')}",
+                      credential4: @payment.payment_method.hash_key,
+                      return_url: spree.return_url(method: :easy_paisa, 
+                      identifier: @payment.id, 
+                      caller: @caller),
+                       service: :easy_paisa,
+                       html: { id: 'payment-form'} do |service|
+  if service.errors.present?    
+    flash[:alert] = service.errors.join("<br/>").html_safe
+  else%>
+    <script>
+      $(document).ready(function() {
+        $('#payment-form').submit();
+      });  
+    </script>
+  <%end%>
+<% end %>

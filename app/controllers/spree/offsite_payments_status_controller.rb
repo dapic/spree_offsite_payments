@@ -99,8 +99,15 @@ module Spree
     private
 
     def load_processor
-      @processor = Spree::OffsitePayments.load_for(request)
-      @processor.log = logger
+      if request.params[:method] == 'easy_paisa' && request.params[:auth_token]
+        @payment=Spree::Payment.find_by_id(request.params[:identifier])
+        @auth_code=request.params[:auth_token]
+        @caller=request.params[:caller]
+        render :easy_paisa_confirm
+      else
+        @processor = Spree::OffsitePayments.load_for(request)
+        @processor.log = logger
+      end
     end
   end
 end
