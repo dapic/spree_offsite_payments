@@ -5,32 +5,6 @@ module Spree
   CheckoutController.class_eval do
     include ::OffsitePayments::Integrations::EasyPaisa
     before_action :easy_paisa_checkout_hook, only: [:update]
-    skip_before_action :load_user, only: [:offsite]
-    prepend_before_action :load_offsite_order, only: [:offsite]
-    
-    def load_offsite_order
-      @spree_current_user = @current_api_user = Spree.user_class.find_by(spree_api_key: params[:token])
-      if @current_api_user
-        sign_in @current_api_user
-        @current_order = @current_api_user.orders.friendly.find(params[:order_id])      
-      end
-    end
-    
-    private :load_offsite_order
-    
-    #/shops/chain-mart/checkout/offsite?payment_method=ubl #&order=ordernumber
-    def offsite
-      @payment_method = PaymentMethod.find(params[:payment_method])
-      @caller="mobile"
-      unless @order.next_step_complete?
-        render nothing: true
-      end
-      @payment = @order.payments.processing.find_or_create_by(amount: @order.outstanding_balance, payment_method: @payment_method)
-      case @payment_method.class.name
-      when Spree::BillingIntegration::EasyPaisa.name
-        render :easy_paisa_checkout_payment
-      end
-    end
     
     private
     def easy_paisa_checkout_hook
