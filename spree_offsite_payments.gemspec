@@ -6,8 +6,8 @@ require 'spree_offsite_payments/version'
 Gem::Specification.new do |spec|
   spec.name          = "spree_offsite_payments"
   spec.version       = SpreeOffsitePayments::VERSION
-  spec.authors       = ["叶树剑", "Arbaz Sajid"]
-  spec.email         = ["yeshujian@shiguangcaibei.com", "arbaz.sajid@arkhitech.com"]
+  spec.authors       = ["叶树剑", "Arkhitech"]
+  spec.email         = ["yeshujian@shiguangcaibei.com", "online@arkhitech.com"]
 
   spec.summary       = %q{This gem integrates Shopify Offsite_Payments gem with Spree Commerce.}
   spec.description   = %q{This is to replace the "spree_alipay" gem.}
@@ -29,22 +29,22 @@ Gem::Specification.new do |spec|
   spec.require_paths = ["lib"]
 
 
-  spec.add_dependency 'spree_core', '~> 3.0.10'
+  spec.add_dependency 'spree_core', '>= 3.0.10'
   spec.add_dependency 'offsite_payments'
   spec.add_dependency 'rqrcode-rails3'
   spec.add_dependency 'redis'
   spec.add_runtime_dependency 'weixin_authorize'
   spec.add_runtime_dependency 'mini_magick'
 
-  spec.add_development_dependency 'capybara', '~> 2.1'
+  spec.add_development_dependency 'capybara', '>= 2.1'
   spec.add_development_dependency 'coffee-rails'
   spec.add_development_dependency 'database_cleaner'
-  spec.add_development_dependency 'factory_girl', '~> 4.4'
+  spec.add_development_dependency 'factory_girl', '>= 4.4'
   spec.add_development_dependency 'ffaker'
   
-  spec.add_development_dependency 'rspec-rails',  '~> 2.13'
-  spec.add_development_dependency "bundler", "~> 1.14"
-  spec.add_development_dependency "rake", "~> 10.0"
+  spec.add_development_dependency 'rspec-rails',  '>= 2.13'
+  spec.add_development_dependency "bundler", ">= 1.14"
+  spec.add_development_dependency "rake", ">= 10.0"
   spec.add_development_dependency "rspec"
   
   spec.add_development_dependency 'sass-rails'
