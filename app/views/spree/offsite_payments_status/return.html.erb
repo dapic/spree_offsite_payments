@@ -1,6 +1,6 @@
 <script type="text/javascript">
    $( document ).ready(function() {      
-       if(!!howmuchApi) {
+       if(!!window.howmuchApi) {
           <%case @result%>
           <%when :payment_processed_already %>
             howmuchApi.postMessage('onPaymentSuccess', '<%=flash[:notice]%>');
