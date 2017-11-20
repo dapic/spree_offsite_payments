@@ -1,15 +1,10 @@
-require 'offsite_payments'
-
-# To change this license header, choose License Headers in Project Properties.
-# To change this template file, choose Tools | Templates
-# and open the template in the editor.
+require 'spree/offsite_payments/processor'
 module Spree::OffsitePayments
-  class UblProcessor < Processor
+  class EasyPaisaProcessor < Processor
     attr_accessor :log
     attr_reader :order, :payment
     def initialize(request)
       @request = request
-      #@request.params[:method].upcase! #TODO to change 'ubl' to UBL
       load_provider
     end
 
@@ -18,24 +13,23 @@ module Spree::OffsitePayments
     end
     
     def parse_request
-      @notify = ::OffsitePayments::Integrations::Ubl::Notification.new(@request.params)
+      @notify = ::OffsitePayments::Integrations::EasyPaisa::Notification.new(@request.params)
     end
       
     
     def load_payment
-      @payment = Spree::Payment.find_by(id: @notify.order_id) ||
-        raise(PaymentNotFoundError, "Could not find payment with identifier #{Spree::OffsitePayments.parse_out_trade_no(@notify.out_trade_no)[1]}")
+      @payment = Spree::Payment.find_by(id: @notify.identifier) ||
+        raise(PaymentNotFoundError, "Could not find payment with identifier #{@notify.identifier}")
       @order = @payment.order
     end
     
     def verify_notify
-      ( raise UnVerifiableNotifyError, "Could not verify the 'notify' request without transaction_id") if @notify.transaction_id.blank?
+      ( raise UnVerifiableNotifyError, "Could not verify the 'notify' request without transaction number") if @notify.transaction_number.blank?
     end
         
     def process
       parse_request
       verify_notify
-      
       result = catch(:done) {
         if process_payment
           process_order
@@ -55,11 +49,26 @@ module Spree::OffsitePayments
     def update_payment_amount
       return unless @notify.respond_to?(:amount)
       # Payment.amount is a BigNum and @notify.amount is an instance of Money
-      unless @notify.amount.amount == @payment.amount
-        log.warn(Spree.t(:payment_notify_shows_different_amount, expected: @payment.amount, actual: @notify.amount.amount ))
-        @payment.amount = @notify.amount.amount
+      unless @notify.amount == @payment.amount
+        log.warn(Spree.t(:payment_notify_shows_different_amount, expected: @payment.amount, actual: @notify.amount ))
+        @payment.amount = @notify.amount
         #@payment.currency = @notify.amount.currency
       end
+    end
+    
+    
+    def update_payment_status
+      if @payment.payment_method.auto_capture?
+        @payment.send(:handle_response, @notify, :complete, :failure)
+        if @notify.success?
+          amount=Money.new(@notify.amount * 100, @payment.currency)
+          @payment.capture_events.create!(amount: @notify.amount)
+        end
+        #@payment.complete!
+      else
+        @payment.send(:handle_response, @notify, :pend, :failure)
+      end
+      throw :done, :payment_failure if @payment.failed?
     end
     
     def process_payment
@@ -74,12 +83,6 @@ module Spree::OffsitePayments
         #TODO show error response to user
         false
       end
-    end
-    
-    private
-    def load_provider
-      @provider = OffsitePayments::Integrations::Ubl::Notification.new(@request.params)
-      @provider.params = @request.params
     end
     
   end
