@@ -6,17 +6,20 @@ module Spree
     include ::OffsitePayments::Integrations::Ubl
     include ::OffsitePayments::Integrations::EasyPaisa
     
-    skip_before_action :load_user, only: [:offsite]
     prepend_before_action :load_offsite_order, only: [:offsite]
     
     def load_offsite_order
-      @spree_current_user = @current_api_user = Spree.user_class.find_by(spree_api_key: params[:token])
-      if @current_api_user
-        sign_in @current_api_user
-        @current_order = @current_api_user.orders.friendly.find(params[:order_id])      
+      if try_spree_current_user
+        @current_order = @current_api_user.orders.friendly.find(params[:order_id])                
+      else
+        #TODO for backward compatibility only. Should probably be removed
+        @spree_current_user = @current_api_user = Spree.user_class.find_by(spree_api_key: params[:token])
+        if @spree_current_user
+          sign_in @current_api_user
+          @current_order = @current_api_user.orders.friendly.find(params[:order_id])
+        end
       end
-    end
-    
+    end    
     private :load_offsite_order
     
     #/shops/chain-mart/checkout/offsite?payment_method=ubl #&order=ordernumber
