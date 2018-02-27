@@ -1,42 +1,22 @@
-<script type="text/javascript">
-   $( document ).ready(function() {      
-       if(!!window.howmuchApi) {
-          <%case @result%>
-          <%when :payment_processed_already %>
-            howmuchApi.postMessage('onPaymentSuccess', '<%=flash[:notice]%>');
-            console.log("onPaymentSuccess");
-          <%when :order_completed%>
-            howmuchApi.postMessage('onPaymentSuccess', '<%=flash[:notice]%>');
-            console.log("onPaymentSuccess");
-          <%when :payment_success_but_order_incomplete%>
-            howmuchApi.postMessage('onPaymentFailure', '<%=flash[:warn]%>');
-            console.log("onPaymentSuccess");
-          <%when :payment_failure%>
-            howmuchApi.postMessage('onPaymentFailure', '<%=flash[:error]%>');
-            console.log("onPaymentSuccess");
-          <%else%>
-            howmuchApi.postMessage('onPaymentSuccess', 'PaymentSuccess');
-            console.log("onPaymentSuccess");
-          <%end%>  
-        } else {
-        <%case @result%>
-        <%when :payment_processed_already %>
-          window.webkit.messageHandlers.howmuchApi.postMessage({'event': 'onPaymentSuccess', 'message': '<%=flash[:notice]%>'});
-          console.log("onPaymentSuccess");
-        <%when :order_completed%>
-          window.webkit.messageHandlers.howmuchApi.postMessage({'event': 'onPaymentSuccess', 'message': '<%=flash[:notice]%>'});
-          console.log("onPaymentSuccess");
-        <%when :payment_success_but_order_incomplete%>
-          window.webkit.messageHandlers.howmuchApi.postMessage({'event': 'onPaymentFailure', 'message': '<%=flash[:warn]%>'});
-          console.log("onPaymentSuccess");
-        <%when :payment_failure%>
-          window.webkit.messageHandlers.howmuchApi.postMessage({'event': 'onPaymentFailure', 'message': '<%=flash[:error]%>'});
-          console.log("onPaymentSuccess");
-        <%else%>
-          window.webkit.messageHandlers.howmuchApi.postMessage({'event': 'onPaymentSuccess', 'message': 'PaymentSuccess'});
-          console.log("onPaymentSuccess");
-        <%end%>  
-        } 
-      });
+<script type="text/javascript">  
+  document.addEventListener("DOMContentLoaded",function(){  
+    <%case @result%>
+    <%when :payment_processed_already %>
+      alert('onPaymentSuccess'+ '<%=flash[:notice]%>');
+      console.log("onPaymentSuccess");
+    <%when :order_completed%>
+      alert('onPaymentSuccess'+ '<%=flash[:notice]%>');
+      console.log("onPaymentSuccess");
+    <%when :payment_success_but_order_incomplete%>
+      alert('onPaymentFailure'+ '<%=flash[:warn]%>');
+      console.log("onPaymentSuccess");
+    <%when :payment_failure%>
+      alert('onPaymentFailure'+ '<%=flash[:error]%>');
+      console.log("onPaymentSuccess");
+    <%else%>
+      alert('onPaymentSuccess'+ @result);
+      console.log("onPaymentSuccess");
+    <%end%>  
+  });
 </script>
 
