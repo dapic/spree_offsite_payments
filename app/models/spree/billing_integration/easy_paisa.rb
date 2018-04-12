@@ -1,11 +1,15 @@
 module Spree
   class BillingIntegration::EasyPaisa < BillingIntegration
-    preference :test_mode, :boolean, :default => true
+    preference :test_mode, :boolean, default: true
     preference :store, :integer
     preference :hash, :string
      
     def provider_class
       ::OffsitePayments::Integrations::EasyPaisa
+    end
+    
+    def test?
+      preferred_test_mode
     end
     
     def store_id
