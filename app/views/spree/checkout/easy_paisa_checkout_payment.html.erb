@@ -11,7 +11,7 @@
                       service: :easy_paisa,
                       html: { id: 'payment-form'} do |service|
   if service.errors.present?    
-    flash[:alert] = service.errors.join("<br/>").html_safe
+    flash[:error] = "Payment failed - #{@processor.response.errors.join("\n")}"
   else%>
     <script>
       $(document).ready(function() {

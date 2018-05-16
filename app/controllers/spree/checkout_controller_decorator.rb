@@ -24,7 +24,8 @@ module Spree
         @current_spree_user = @current_api_user = Spree.user_class.find_by(spree_api_key: params[:token])
         if @current_spree_user
           sign_in @current_spree_user
-          @current_order = Spree::Order.accessible_by(current_ability).find_by!(number: params[:order_id])
+          @current_order = Spree::Order.find_by!(number: params[:order_id])
+          authorize! :read, @current_order
         end
       end
     end    

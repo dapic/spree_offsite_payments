@@ -37,7 +37,7 @@ module Spree
         redirect_to shop_checkout_state_url(shop_id: @order.shop.id, state: "payment") if params[:caller]!="mobile"
       when :payment_failure
         unless @processor.response.errors.blank?
-          flash[:error] = @processor.response.errors.join("<br/>").html_safe
+          flash[:error] = "Payment failed - #{@processor.response.errors.join("\n")}"
         else
           flash[:error] = "Payment failed"
         end
