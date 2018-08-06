@@ -8,7 +8,7 @@ module Spree
     
     private
     def ubl_checkout_hook
-      @caller="web"
+      @caller = 'web'
       #support step confirmation 
       return unless ( @order.next_step_complete? && is_ubl? )
       @payment = @order.payments.processing.find_or_create_by(amount: @order.outstanding_balance, payment_method: @payment_method)

@@ -1,13 +1,13 @@
-<%  payment_service_for @payment.id, "#{@order.number}",
+<%  payment_service_for @payment.id, "#{@payment.order.number}",
                       amount: @payment.amount, 
                       account_name: @payment.payment_method.store_id,
                       test: @payment.payment_method.test?,
                       currency: @payment.currency,
                       auto_capture: @payment.payment_method.auto_capture?,
-                      credential2: "#{@order.email}",
-                      credential3: "#{@order.user&.verified_phone_number}",
+                      credential2: "#{@payment.order.email}",
+                      credential3: "#{@payment.order.user&.verified_phone_number.gsub('+', '')}",
                       credential4: @payment.payment_method.hash_key,
-                      return_url: spree.return_url(method: :easy_paisa, identifier: @payment.id, caller: @caller),
+                      return_url: spree.return_url(method: :easy_paisa, caller: (@caller || 'web') ),
                       service: :easy_paisa,
                       html: { id: 'payment-form'} do |service|
   if service.errors.present?    

@@ -1,6 +1,10 @@
 <%  payment_service_for @payment.id, "#{@payment.order.number}",
-                      authcode: @auth_code,
-                      return_url: spree.return_url(method: :easy_paisa, identifier: @payment.id, caller: @caller),
+                      checkout_token: @checkout_token,
+                      credential4: @payment.payment_method.hash_key,
+                      return_url: spree.return_url(
+                        method: :easy_paisa, identifier: @payment.id, 
+                        caller: (@caller || 'web')
+                      ),
                       service: :easy_paisa,
                       html: { id: 'payment-form'} do |service|
   if service.errors.present?    

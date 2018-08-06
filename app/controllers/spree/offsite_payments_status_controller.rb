@@ -17,34 +17,33 @@ module Spree
     def return
       @result = @processor.process
       #logger.debug("session contains: #{session.inspect}")
-      @order=@processor.order
-      @payment=Spree::Payment.find_by_id(params[:identifier]) if params[:identifier]
-      @order||= @payment.order if @payment
-      logger.debug("received result of #{@result.to_s} for payment #{@payment.id} of order #{@order.number}")
+      @order = @processor.order
+      @order ||= @processor.payment.order if @processor.payment
+      logger.debug("received result of #{@result.to_s} for payment #{@processor.payment.id} of order #{@order.number}")
      
       case @result
       when :payment_processed_already
         # if it's less than a minute ago, maybe it's processed by the "notification"
-        flash[:notice] = "Payment Processed Already" if ((Time.now - @processor.payment.updated_at) > 1.minute)
-        redirect_to spree.order_path(@order) if params[:caller]!="mobile"
+        flash[:notice] = 'Payment Processed Already' if ((Time.now - @processor.payment.updated_at) > 1.minute)
+        redirect_to spree.order_path(@order) if params[:caller] != 'mobile'
       when :order_completed
-        flash[:notice] = "Order Completed"
+        flash[:notice] = 'Order Completed'
         #session[:order_id] = nil
-        redirect_to spree.order_path(@order) if params[:caller]!="mobile"
+        redirect_to spree.order_path(@order) if params[:caller] != 'mobile'
       when :payment_success_but_order_incomplete
-        flash[:warn] = "Payment success but order incomplete"
+        flash[:warn] = 'Payment success but order incomplete'
         #redirect_to edit_order_checkout_url(@order, state: "payment")
-        redirect_to shop_checkout_state_url(shop_id: @order.shop.id, state: "payment") if params[:caller]!="mobile"
+        redirect_to shop_checkout_state_url(shop_id: @order.shop.id, state: 'payment') if params[:caller]!="mobile"
       when :payment_failure
         unless @processor.response.errors.blank?
           flash[:error] = "Payment failed - #{@processor.response.errors.join("\n")}"
         else
-          flash[:error] = "Payment failed"
+          flash[:error] = 'Payment failed'
         end
         #redirect_to edit_order_checkout_url(@order, state: "payment")
-         redirect_to shop_checkout_state_url(shop_id: @order.shop.id, state: "payment") if params[:caller]!="mobile"
+         redirect_to shop_checkout_state_url(shop_id: @order.shop.slug, state: 'payment') if params[:caller]!="mobile"
       else
-         redirect_to spree.order_path(@order) if params[:caller]!="mobile"
+         redirect_to spree.order_path(@order) if params[:caller] != 'mobile'
       end
     end
 
@@ -100,9 +99,9 @@ module Spree
 
     def load_processor
       if request.params[:method] == 'easy_paisa' && request.params[:auth_token]
-        @payment=Spree::Payment.find_by_id(request.params[:identifier])
-        @auth_code=request.params[:auth_token]
-        @caller=request.params[:caller]
+        @payment = Spree::Payment.find_by_id(request.params[:orderRefNumber] || request.params[:identifier])
+        @checkout_token = request.params[:auth_token]
+        @caller = request.params[:caller]
         render :easy_paisa_confirm
       else
         @processor = Spree::OffsitePayments.load_for(request)

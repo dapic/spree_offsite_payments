@@ -18,18 +18,13 @@ module Spree::OffsitePayments
       
     
     def load_payment
-      @payment = Spree::Payment.find_by(id: @notify.identifier) ||
-        raise(PaymentNotFoundError, "Could not find payment with identifier #{@notify.identifier}")
+      @payment = Spree::Payment.find_by(id: @notify.order_ref_number) ||
+        raise(PaymentNotFoundError, "Could not find payment with order_ref_number #{@notify.order_ref_number}")
       @order = @payment.order
     end
-    
-    def verify_notify
-      ( raise UnVerifiableNotifyError, "Could not verify the 'notify' request without transaction number") if @notify.transaction_number.blank?
-    end
-        
+            
     def process
       parse_request
-      verify_notify
       result = catch(:done) {
         if process_payment
           process_order
@@ -45,38 +40,29 @@ module Spree::OffsitePayments
         result
       end
     end
-    
-    def update_payment_amount
-      return unless @notify.respond_to?(:amount)
-      # Payment.amount is a BigNum and @notify.amount is an instance of Money
-      unless @notify.amount == @payment.amount
-        log.warn(Spree.t(:payment_notify_shows_different_amount, expected: @payment.amount, actual: @notify.amount ))
-        @payment.amount = @notify.amount
-        #@payment.currency = @notify.amount.currency
-      end
-    end
-    
+        
     
     def update_payment_status
-      if @payment.payment_method.auto_capture?
+      #if @payment.payment_method.auto_capture?
         @payment.send(:handle_response, @notify, :complete, :failure)
         if @notify.success?
-          amount=Money.new(@notify.amount * 100, @payment.currency)
-          @payment.capture_events.create!(amount: @notify.amount)
+          @payment.process!
+          #capture the payment not just authorize
+          @payment.capture!
         end
         #@payment.complete!
-      else
-        @payment.send(:handle_response, @notify, :pend, :failure)
-      end
+      #else
+      #  @payment.send(:handle_response, @notify, :pend, :failure)
+      #end
       throw :done, :payment_failure if @payment.failed?
     end
     
     def process_payment
-      if @notify.acknowledge
-        load_payment
+      return false if @notify.order_ref_number.blank?
+      load_payment
+      if @notify.acknowledge(@payment.payment_method.hash_key)
         ensure_payment_not_processed
         create_payment_log_entry
-        update_payment_amount 
         update_payment_status
         true
       else

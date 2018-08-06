@@ -66,7 +66,7 @@ module Spree::OffsitePayments
     end
 
     def ensure_payment_not_processed
-      throw :done, :payment_processed_already if @payment.completed? == @notify.success?
+      throw :done, :payment_processed_already if @payment.completed? && @notify.success?
     end
 
     def create_payment_log_entry
@@ -93,7 +93,10 @@ module Spree::OffsitePayments
       if @payment.payment_method.auto_capture?
         @payment.send(:handle_response, @notify, :complete, :failure)
         if @notify.success?
-          @payment.capture_events.create!(amount: @notify.amount)
+          #@payment.capture_events.create!(amount: @notify.amount)
+          @payment.process!
+          #capture the payment not just authorize
+          @payment.capture!
         end
         #@payment.complete!
       else
@@ -107,8 +110,11 @@ module Spree::OffsitePayments
         throw :done, :payment_success_but_order_incomplete
       else
         #TODO: The following logic need to be revised
-        @order.update_attributes(:state => "complete", :completed_at => Time.now) 
-        @order.finalize!
+        unless @order.passed_checkout_step?('complete')
+          @order.next!
+        else
+          @order.finalize!          
+        end
         throw :done, :order_completed 
       end
     end
