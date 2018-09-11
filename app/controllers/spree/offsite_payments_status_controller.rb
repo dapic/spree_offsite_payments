@@ -18,13 +18,17 @@ module Spree
       @result = @processor.process
       #logger.debug("session contains: #{session.inspect}")
       @order = @processor.order
-      @order ||= @processor.payment.order if @processor.payment
-      logger.debug("received result of #{@result.to_s} for payment #{@processor.payment.id} of order #{@order.number}")
+      @payment ||= @processor.payment
+      unless @payment
+        @payment = Spree::Payment.find_by_id(request.params[:orderRefNumber] || request.params[:identifier])
+      end
+      @order ||= @payment.order if @payment
+      logger.debug("received result of #{@result.to_s} for payment #{@payment&.id} of order #{@order.number}")
      
       case @result
       when :payment_processed_already
         # if it's less than a minute ago, maybe it's processed by the "notification"
-        flash[:notice] = 'Payment Processed Already' if ((Time.now - @processor.payment.updated_at) > 1.minute)
+        flash[:notice] = 'Payment Processed Already' if ((Time.now - @payment.updated_at) > 1.minute)
         redirect_to spree.order_path(@order) if params[:caller] != 'mobile'
       when :order_completed
         flash[:notice] = 'Order Completed'

@@ -19,6 +19,9 @@ module Spree
     def hash_key
       preferred_hash
     end
+    def source_required?
+      false
+    end
         
   end
 end

@@ -13,6 +13,9 @@ module Spree
     def key
       preferred_sign
     end
+    def source_required?
+      false
+    end
         
   end
 end
