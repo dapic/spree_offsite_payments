@@ -28,7 +28,8 @@ module SpreeOffsitePayments
 
       app.config.spree.payment_methods += [
         Spree::BillingIntegration::UBL,
-        Spree::BillingIntegration::EasyPaisa
+        Spree::BillingIntegration::EasyPaisa,
+        Spree::BillingIntegration::JazzCash
       ]
     end
   end

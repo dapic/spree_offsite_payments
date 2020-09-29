@@ -5,6 +5,7 @@ module Spree
   CheckoutController.class_eval do
     include ::OffsitePayments::Integrations::Ubl
     include ::OffsitePayments::Integrations::EasyPaisa
+    include ::OffsitePayments::Integrations::JazzCash
     
     prepend_before_action :load_offsite_order, only: [:offsite]
     skip_before_action :ensure_order_not_completed, only: [:offsite]
@@ -47,6 +48,8 @@ module Spree
         render :ubl_checkout_payment
       when Spree::BillingIntegration::EasyPaisa.name
         render :easy_paisa_checkout_payment
+      when Spree::BillingIntegration::JazzCash.name
+        render :jazz_cash_checkout_payment
       end
     end
 
