@@ -7,7 +7,7 @@
 	@salt = ENV['salt']
 	@hashString = ''
 	@hashString+= ENV['salt'] + '&'
-	@hashString+= @payment.amount.to_i.to_s + '&'
+	@hashString+= "#{@payment.amount.to_f.round}" + '&'
 	@hashString+= ENV['pp_BankID'] + '&'
 	@hashString+= "#{@payment.order.number}" + '&'
 	@hashString+= "Order for : #{@payment.order.number}" + '&'
@@ -39,7 +39,7 @@
 											pp_ProductID: ENV['pp_ProductID'],
 											pp_Description: "Order for : #{@payment.order.number}",
 											pp_TxnRefNo: transaction_time,
-											pp_Amount: @payment.amount.to_i.to_s,
+											pp_Amount: "#{@payment.amount.to_f.round}",
 											pp_BillReference: "#{@payment.order.number}",
 											pp_TxnDateTime: transaction_time,
 											pp_TxnExpiryDateTime: transaction_exp_time,
