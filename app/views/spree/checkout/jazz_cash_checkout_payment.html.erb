@@ -1,22 +1,69 @@
-<%  payment_service_for @payment.id, "#{@payment.order.number}",
-                      amount: @payment.amount, 
-                      account_name: @payment.payment_method.store_id,
-                      test: @payment.payment_method.test?,
-                      currency: @payment.currency,
-                      auto_capture: @payment.payment_method.auto_capture?,
-                      credential2: "#{@payment.order.email}",
-                      credential3: "#{@payment.order.user&.verified_phone_number.gsub('+', '')}",
-                      credential4: @payment.payment_method.hash_key,
-                      return_url: spree.return_url(method: :jazz_cash, caller: (@caller || 'web') ),
-                      service: :jazz_cash,
-                      html: { id: 'payment-form'} do |service|
-  if service.errors.present?    
-    flash[:error] = "Payment failed - #{@processor.response.errors.join("\n")}"
-  else%>
-    <script>
-      $(document).ready(function() {
-        $('#payment-form').submit();
-      });  
-    </script>
-  <%end%>
+<%
+	current_time = Time.now
+	current_time_plus_1 = Time.now + 1.day
+	transaction_time = current_time.strftime("%Y%m%d%H%M%S")
+	transaction_exp_time = current_time_plus_1.strftime("%Y%m%d%H%M%S")
+	
+	@salt = ENV['salt']
+	@hashString = ''
+	@hashString+= ENV['salt'] + '&'
+	@hashString+= @payment.amount.to_i.to_s + '&'
+	@hashString+= ENV['pp_BankID'] + '&'
+	@hashString+= "#{@payment.order.number}" + '&'
+	@hashString+= "Order for : #{@payment.order.number}" + '&'
+	@hashString+= ENV['pp_Language'] + '&'
+	@hashString+= ENV['pp_MerchantID'] + '&'
+	@hashString+= ENV['pp_Password'] + '&'
+	@hashString+= ENV['pp_ProductID'] + '&'
+	@hashString+= spree.return_url(method: :jazz_cash, caller: (@caller || 'web') ) + '&'
+	@hashString+= @payment.currency + '&'
+	@hashString+= transaction_time + '&'
+	@hashString+= transaction_exp_time + '&'
+	@hashString+= transaction_time + '&'
+	@hashString+= ENV['pp_Version'] + '&'
+	@hashString+= '1&'
+	@hashString+= '2&'
+	@hashString+= '3&'
+	@hashString+= '4&'
+	@hashString+= '5'
+	@pp_SecureHash = OpenSSL::HMAC.hexdigest('SHA256', @salt, @hashString)
+	
+	payment_service_for @payment.id, "#{@payment.order.number}",
+											pp_Version: ENV['pp_Version'],
+											pp_TxnType: ENV['pp_TxnType'],
+											pp_Language: ENV['pp_Language'],
+											pp_MerchantID: ENV['pp_MerchantID'],
+											pp_SubMerchantID: ENV['pp_SubMerchantID'],
+											pp_Password: ENV['pp_Password'],
+											pp_BankID: ENV['pp_BankID'],
+											pp_ProductID: ENV['pp_ProductID'],
+											pp_Description: "Order for : #{@payment.order.number}",
+											pp_TxnRefNo: transaction_time,
+											pp_Amount: @payment.amount.to_i.to_s,
+											pp_BillReference: "#{@payment.order.number}",
+											pp_TxnDateTime: transaction_time,
+											pp_TxnExpiryDateTime: transaction_exp_time,
+											pp_TxnCurrency: @payment.currency,
+											pp_SecureHash: @pp_SecureHash,
+											amount: @payment.amount,
+											account_name: @payment.payment_method.store_id,
+											test: @payment.payment_method.test?,
+											currency: @payment.currency,
+											auto_capture: @payment.payment_method.auto_capture?,
+											credential2: @hashString,
+											# credential2: "#{@payment.order.email}",
+											credential3: "#{@payment.order.user&.verified_phone_number.gsub('+', '')}",
+											credential4: @payment.payment_method.hash_key,
+											return_url: spree.return_url(method: :jazz_cash, caller: (@caller || 'web') ),
+											service: :jazz_cash,
+											html: { id: 'payment-form'} do |service|
+		if service.errors.present?
+			flash[:error] = "Payment failed - #{@processor.response.errors.join("\n")}"
+		else%>
+		<script>
+        $(document).ready(function() {
+            $('#payment-form').submit();
+        });
+		</script>
+	<%end%>
 <% end %>
