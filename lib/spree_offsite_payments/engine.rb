@@ -27,7 +27,7 @@ module SpreeOffsitePayments
       ActionView::Base.send(:include, OffsitePayments::ActionViewHelper)
 
       app.config.spree.payment_methods += [
-        Spree::BillingIntegration::UBL,
+        Spree::BillingIntegration::Ubl,
         Spree::BillingIntegration::EasyPaisa
       ]
     end

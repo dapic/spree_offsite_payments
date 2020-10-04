@@ -94,9 +94,14 @@ module Spree::OffsitePayments
         @payment.send(:handle_response, @notify, :complete, :failure)
         if @notify.success?
           #@payment.capture_events.create!(amount: @notify.amount)
-          @payment.process!
-          #capture the payment not just authorize
-          @payment.capture!
+          begin
+            @payment.process!
+            #capture the payment not just authorize
+            @payment.capture!
+          rescue Core::GatewayError => ex
+            Raven.capture_exception(ex)
+            @payment.capture_events.create!(amount: @notify.amount)            
+          end
         end
         #@payment.complete!
       else

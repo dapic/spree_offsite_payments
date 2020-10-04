@@ -60,11 +60,22 @@ module Spree::OffsitePayments
     def process_payment
       return false if @notify.order_ref_number.blank?
       load_payment
-      if @notify.acknowledge(@payment.payment_method.hash_key)
-        ensure_payment_not_processed
-        create_payment_log_entry
-        update_payment_status
-        true
+      payment_method = @payment.payment_method
+      if @notify.acknowledge(payment_method.hash_key) 
+        transaction_response = @notify.verify(payment_method.partner_username, 
+          payment_method.partner_password, payment_method.store,
+          payment_method.partner_wsdl
+        )
+        if transaction_response && transaction_response[:transactionStatus] =~ /paid/i &&
+            (transaction_response[:transactionAmount] - @payment.amount).abs < 0.001
+          ensure_payment_not_processed
+          create_payment_log_entry
+          update_payment_status
+          true
+        else
+          #TODO show error response to user
+          false
+        end        
       else
         #TODO show error response to user
         false

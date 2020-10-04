@@ -1,14 +1,13 @@
-#encoding: utf-8
-require 'offsite_payments'
-
-module Spree
-  CheckoutController.class_eval do
-    include ::OffsitePayments::Integrations::Ubl
-    include ::OffsitePayments::Integrations::EasyPaisa
-    
-    prepend_before_action :load_offsite_order, only: [:offsite]
-    skip_before_action :ensure_order_not_completed, only: [:offsite]
-    before_action :ensure_order_not_paid, only: [:offsite]
+module OffsitePayments
+  module CheckoutControllerDecorator
+    def self.prepended(base)
+      base.include ::OffsitePayments::Integrations::Ubl
+      base.include ::OffsitePayments::Integrations::EasyPaisa
+      
+      base.prepend_before_action :load_offsite_order, only: [:offsite]
+      base.skip_before_action :ensure_order_not_completed, only: [:offsite]
+      base.before_action :ensure_order_not_paid, only: [:offsite]  
+    end
     
     def ensure_order_not_paid
       redirect_to spree.cart_path, error: "Payment is already completed for order: #{@order.number}" if @order.paid?
@@ -43,13 +42,13 @@ module Spree
 #      end
       @payment = @order.payments.processing.find_or_create_by(amount: @order.outstanding_balance, payment_method: @payment_method)
       case @payment_method.class.name
-      when Spree::BillingIntegration::UBL.name
+      when Spree::BillingIntegration::Ubl.name
         render :ubl_checkout_payment
       when Spree::BillingIntegration::EasyPaisa.name
         render :easy_paisa_checkout_payment
       end
     end
 
+    Spree::CheckoutController.prepend self
   end
-
 end

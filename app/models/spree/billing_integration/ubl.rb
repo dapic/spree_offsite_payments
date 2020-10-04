@@ -1,5 +1,5 @@
 module Spree
-  class BillingIntegration::UBL < BillingIntegration
+  class BillingIntegration::Ubl < BillingIntegration
     preference :test_mode, :boolean, default: true
      
     def provider_class
