@@ -4,7 +4,7 @@ module OffsitePayments
     def self.prepended(base)
       base.include ::OffsitePayments::Integrations::Ubl
       base.include ::OffsitePayments::Integrations::EasyPaisa
-      include ::OffsitePayments::Integrations::JazzCash
+      base.include ::OffsitePayments::Integrations::JazzCash
       
       base.prepend_before_action :load_offsite_order, only: [:offsite]
       base.skip_before_action :ensure_order_not_completed, only: [:offsite]
@@ -35,7 +35,7 @@ module OffsitePayments
     #/shops/chain-mart/checkout/offsite?payment_method=ubl #&order=ordernumber
     def offsite
       #byebug
-      @payment_method = PaymentMethod.find(params[:payment_method])
+      @payment_method = Spree::PaymentMethod.find(params[:payment_method])
       @caller = 'mobile'
       #not requiring next_step_complete anymore as ensure_order_not_paid has been added
 #      unless @order.next_step_complete?
