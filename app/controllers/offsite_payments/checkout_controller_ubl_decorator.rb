@@ -1,11 +1,10 @@
-#encoding: utf-8
-require 'offsite_payments'
+module OffsitePayments
+  module CheckoutControllerUblDecorator
+    def self.prepended(base)
+      base.include ::OffsitePayments::Integrations::Ubl
+      base.before_action :ubl_checkout_hook, only: [:update]
+    end
 
-module Spree
-  CheckoutController.class_eval do
-    include ::OffsitePayments::Integrations::Ubl
-    before_action :ubl_checkout_hook, only: [:update]
-    
     private
     def ubl_checkout_hook
       @caller = 'web'
@@ -17,9 +16,9 @@ module Spree
 
     def is_ubl?
       @payment_method = PaymentMethod.find(params[:order][:payments_attributes].first[:payment_method_id]) if params[:order] && params[:order][:payments_attributes]
-      Spree::BillingIntegration::UBL == @payment_method.class rescue false
+      Spree::BillingIntegration::Ubl == @payment_method.class rescue false
     end
 
+    Spree::CheckoutController.prepend self
   end
-
 end

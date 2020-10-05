@@ -1,10 +1,9 @@
-#encoding: utf-8
-require 'offsite_payments'
-
-module Spree
-  CheckoutController.class_eval do
-    include ::OffsitePayments::Integrations::EasyPaisa
-    before_action :easy_paisa_checkout_hook, only: [:update]
+module OffsitePayments
+  module CheckoutControllerEasyPaisaDecorator
+    def self.prepended(base)
+      base.include ::OffsitePayments::Integrations::EasyPaisa
+      base.before_action :easy_paisa_checkout_hook, only: [:update]  
+    end
     
     private
     def easy_paisa_checkout_hook
@@ -20,6 +19,6 @@ module Spree
       Spree::BillingIntegration::EasyPaisa == @payment_method.class rescue false
     end
 
+    Spree::CheckoutController.prepend self
   end
-
 end
