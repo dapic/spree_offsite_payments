@@ -23,7 +23,7 @@ module Spree
         @payment = Spree::Payment.find_by_id(request.params[:orderRefNumber] || request.params[:identifier])
       end
       @order ||= @payment.order if @payment
-      logger.debug("received result of #{@result.to_s} for payment #{@payment&.id} of order #{@order.number}")
+      logger.debug("received result of #{@result.to_s} for payment #{@payment&.id} of order #{@order&.number}")
      
       case @result
       when :payment_processed_already
@@ -45,7 +45,7 @@ module Spree
           flash[:error] = 'Payment failed'
         end
         #redirect_to edit_order_checkout_url(@order, state: "payment")
-         redirect_to shop_checkout_state_url(shop_id: @order.shop.slug, state: 'payment') if params[:caller]!="mobile"
+         redirect_to shop_checkout_state_url(shop_id: @order&.shop&.slug, state: 'payment') if params[:caller]!="mobile"
       else
          redirect_to spree.order_path(@order) if params[:caller] != 'mobile'
       end

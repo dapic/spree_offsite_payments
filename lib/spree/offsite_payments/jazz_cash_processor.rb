@@ -53,7 +53,7 @@ module Spree::OffsitePayments
     def process_payment
       return false if @notify.order_ref_number.blank?
       load_payment
-      if @notify.acknowledge(@payment.payment_method.hash_key)
+      if @notify.acknowledge
         ensure_payment_not_processed
         create_payment_log_entry
         update_payment_status
@@ -62,6 +62,12 @@ module Spree::OffsitePayments
         #TODO show error response to user
         false
       end
+    end
+
+    def process_order
+      #TODO: check this logic payment is processed then this method will call and we need to complete order.
+      @order.finalize!
+      throw :done, :order_completed
     end
     
   end

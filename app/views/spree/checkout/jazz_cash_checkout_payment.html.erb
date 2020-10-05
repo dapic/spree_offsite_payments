@@ -9,8 +9,8 @@
 	@hashString+= ENV['salt'] + '&'
 	@hashString+= "#{@payment.amount.to_f.round}" + '&'
 	@hashString+= ENV['pp_BankID'] + '&'
-	@hashString+= "#{@payment.order.number}" + '&'
-	@hashString+= "Order for : #{@payment.order.number}" + '&'
+	@hashString+= "#{@payment.id}" + '&'
+	@hashString+= "Payment Id: #{@payment.id}" + '&'
 	@hashString+= ENV['pp_Language'] + '&'
 	@hashString+= ENV['pp_MerchantID'] + '&'
 	@hashString+= ENV['pp_Password'] + '&'
@@ -37,10 +37,10 @@
 											pp_Password: ENV['pp_Password'],
 											pp_BankID: ENV['pp_BankID'],
 											pp_ProductID: ENV['pp_ProductID'],
-											pp_Description: "Order for : #{@payment.order.number}",
+											pp_Description: "Payment Id: #{@payment.id}",
 											pp_TxnRefNo: transaction_time,
 											pp_Amount: "#{@payment.amount.to_f.round}",
-											pp_BillReference: "#{@payment.order.number}",
+											pp_BillReference: "#{@payment.id}",
 											pp_TxnDateTime: transaction_time,
 											pp_TxnExpiryDateTime: transaction_exp_time,
 											pp_TxnCurrency: @payment.currency,
