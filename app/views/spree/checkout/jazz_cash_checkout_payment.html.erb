@@ -3,11 +3,12 @@
 	current_time_plus_1 = Time.now + 1.day
 	transaction_time = current_time.strftime("%Y%m%d%H%M%S")
 	transaction_exp_time = current_time_plus_1.strftime("%Y%m%d%H%M%S")
+	amount = (100 * @payment.amount.to_r).to_i
 	
 	@salt = ENV['salt']
 	@hashString = ''
 	@hashString+= ENV['salt'] + '&'
-	@hashString+= "#{@payment.amount.to_f.round}" + '&'
+	@hashString+= "#{amount}" + '&'
 	@hashString+= ENV['pp_BankID'] + '&'
 	@hashString+= "#{@payment.id}" + '&'
 	@hashString+= "Payment Id: #{@payment.id}" + '&'
@@ -39,13 +40,13 @@
 											pp_ProductID: ENV['pp_ProductID'],
 											pp_Description: "Payment Id: #{@payment.id}",
 											pp_TxnRefNo: transaction_time,
-											pp_Amount: "#{@payment.amount.to_f.round}",
+											pp_Amount: "#{amount}",
 											pp_BillReference: "#{@payment.id}",
 											pp_TxnDateTime: transaction_time,
 											pp_TxnExpiryDateTime: transaction_exp_time,
 											pp_TxnCurrency: @payment.currency,
 											pp_SecureHash: @pp_SecureHash,
-											amount: @payment.amount,
+											amount: amount,
 											account_name: @payment.payment_method.store_id,
 											test: @payment.payment_method.test?,
 											currency: @payment.currency,
