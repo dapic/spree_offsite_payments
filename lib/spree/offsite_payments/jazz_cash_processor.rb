@@ -46,6 +46,7 @@ module Spree::OffsitePayments
         @payment.send(:handle_response, @notify, :complete, :failure)
         if @notify.success?
           @payment.process!
+          @payment.capture!
         end
       throw :done, :payment_failure if @payment.failed?
     end
@@ -65,8 +66,11 @@ module Spree::OffsitePayments
     end
 
     def process_order
-      #TODO: check this logic payment is processed then this method will call and we need to complete order.
-      @order.finalize!
+      unless @order.passed_checkout_step?('complete')
+        @order.next!
+      else
+        @order.finalize!
+      end
       throw :done, :order_completed
     end
     
