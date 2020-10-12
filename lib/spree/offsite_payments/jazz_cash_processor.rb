@@ -56,11 +56,12 @@ module Spree::OffsitePayments
       load_payment
       if @notify.acknowledge
         ensure_payment_not_processed
-        create_payment_log_entry
+        # create_payment_log_entry
         update_payment_status
         true
       else
         #TODO show error response to user
+        create_payment_log_entry
         false
       end
     end
