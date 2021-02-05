@@ -36,12 +36,12 @@ module Spree
         if @order.is_package_order?
           redirect_to business_dashboard_path(id: @order.package.id) if params[:caller] != 'mobile'
         else
-          redirect_to store_order_path(@order.store.slug, @order) if params[:caller] != 'mobile'
+          redirect_to store_order_path(@order.store.code, @order) if params[:caller] != 'mobile'
         end
       when :payment_success_but_order_incomplete
         flash[:warn] = 'Payment success but order incomplete'
         #redirect_to edit_order_checkout_url(@order, state: "payment")
-        redirect_to store_checkout_state_url(store_id: @order.store.slug, state: 'payment') if params[:caller]!="mobile"
+        redirect_to store_checkout_state_url(store_id: @order.store.code, state: 'payment') if params[:caller]!="mobile"
       when :payment_failure
         unless @processor.response.errors.blank?
           flash[:error] = "Payment failed - #{@processor.response.errors.join("\n")}"
@@ -49,7 +49,7 @@ module Spree
           flash[:error] = 'Payment failed'
         end
         #redirect_to edit_order_checkout_url(@order, state: "payment")
-         redirect_to store_checkout_state_url(store_id: @order&.store&.slug, state: 'payment') if params[:caller]!="mobile"
+         redirect_to store_checkout_state_url(store_id: @order&.store&.code, state: 'payment') if params[:caller]!="mobile"
       else
          redirect_to spree.order_path(@order) if params[:caller] != 'mobile'
       end
