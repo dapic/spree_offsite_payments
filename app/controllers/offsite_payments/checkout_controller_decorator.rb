@@ -42,7 +42,7 @@ module OffsitePayments
 #        render body: nil
 #        return
 #      end
-      @payment = @order.payments.processing.find_or_create_by(amount: @order.outstanding_balance, payment_method: @payment_method)
+      @payment = @order.payments.processing.find_or_create_by(amount: @order.order_total_after_store_credit, payment_method: @payment_method)
       case @payment_method.class.name
       when Spree::BillingIntegration::Ubl.name
         render :ubl_checkout_payment
