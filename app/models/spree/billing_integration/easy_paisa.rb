@@ -14,11 +14,7 @@ module Spree
     def test?
       preferred_test_mode
     end
-    
-    def store_id
-      preferred_store
-    end
-    
+        
     def hash_key
       preferred_hash
     end

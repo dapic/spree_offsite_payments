@@ -1,4 +1,4 @@
-<%  payment_service_for @payment.id, "#{@payment.order.number}",
+<%=  payment_service_for @payment.id, "#{@payment.order.number}",
                       checkout_token: @checkout_token,
                       credential4: @payment.payment_method.hash_key,
                       return_url: spree.return_url(

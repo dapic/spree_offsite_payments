@@ -99,7 +99,7 @@ module Spree::OffsitePayments
             #capture the payment not just authorize
             @payment.capture!
           rescue Core::GatewayError => ex
-            Raven.capture_exception(ex)
+            Sentry.capture_exception(ex)
             @payment.capture_events.create!(amount: @notify.amount)            
           end
         end

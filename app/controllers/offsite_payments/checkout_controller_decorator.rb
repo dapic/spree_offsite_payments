@@ -32,7 +32,7 @@ module OffsitePayments
     end    
     private :load_offsite_order
     
-    #/shops/chain-mart/checkout/offsite?payment_method=ubl #&order=ordernumber
+    #/stores/chain-mart/checkout/offsite?payment_method=ubl #&order=ordernumber
     def offsite
       #byebug
       @payment_method = Spree::PaymentMethod.find(params[:payment_method])
