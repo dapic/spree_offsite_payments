@@ -3,7 +3,7 @@ module SpreeOffsitePayments
     require 'spree/core'
     isolate_namespace Spree
     engine_name 'spree_offsite_payments'
-    config.autoload_paths += %W(#{config.root}/lib)
+    config.autoload_paths += %W(#{config.root}/lib #{config.root}/app/models #{config.root}/app/services #{config.root}/app)
 
     # use rspec for tests
     config.generators do |g|
@@ -11,8 +11,12 @@ module SpreeOffsitePayments
     end
 
     def self.activate
-      Dir.glob(File.join(File.dirname(__FILE__), '../../app/**/*.rb')) do |c|
-        Rails.configuration.cache_classes ? require(c) : load(c)
+      #Explicitly setting the order here is to make sure models and services are loaded before controllers
+      %w(models services *).each do |partial_path|
+        Dir.glob(File.join(File.dirname(__FILE__), '../../app/', partial_path, '/**/*.rb')) do |c|
+          require_dependency(c)
+#          Rails.configuration.cache_classes ? require(c) : load(c)
+        end
       end
     end
 
@@ -23,9 +27,9 @@ module SpreeOffsitePayments
       ActionView::Base.send(:include, OffsitePayments::ActionViewHelper)
 
       app.config.spree.payment_methods += [
-        Spree::BillingIntegration::Alipay,
-        Spree::BillingIntegration::Wxpay,
-        Spree::BillingIntegration::Tenpay
+        Spree::BillingIntegration::Ubl,
+        Spree::BillingIntegration::EasyPaisa,
+        Spree::BillingIntegration::JazzCash
       ]
     end
   end

@@ -1,0 +1,8 @@
+<!-- replace_contents 'ul#payment-methods' -->
+      <% @order.available_payment_methods.each do |method| %>
+        <li id="payment_method_<%= method.id %>" class="<%= 'last' if method == @order.available_payment_methods.last %>" data-hook>
+          <fieldset>
+            <%= render :partial => "spree/checkout/payment/#{method.method_type}", :locals => { :payment_method => method, :payment=> @payment, :order => @order} %>
+          </fieldset>
+        </li>
+      <% end %>

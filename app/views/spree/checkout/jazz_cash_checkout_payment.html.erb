@@ -1,0 +1,49 @@
+<% payment_amount = (100 * @payment.calculated_amount.to_r).to_i %>
+<%= payment_service_for @payment.id, ENV['pp_MerchantID'],
+          credential2: ENV['pp_Password'],
+          amount: payment_amount,
+          currency: @payment.currency,
+          # return_url: process_response_payment_url(id: @payment.id, host: request.base_url),
+          return_url: spree.return_url(method: :jazz_cash, caller: (@caller || 'web') ),
+          test: @payment.payment_method.test?,
+          service: :jazz_cash,
+          html: { id: 'payment-form'} do |service|
+  service.salt = @payment.payment_method.salt
+  service.valid_till = Time.now.tomorrow
+  service.add_field('pp_Version', ENV['pp_Version'])
+  service.add_field('pp_TxnType', ENV['pp_TxnType'])
+  service.add_field('pp_Language', ENV['pp_Language'])
+  service.add_field('pp_SubMerchantID', ENV['pp_SubMerchantID'])
+  
+  service.add_field('pp_BankID', ENV['pp_BankID'])
+  service.add_field('pp_ProductID', ENV['pp_ProductID'])
+  service.add_field('pp_BillReference', "#{@payment.id}")
+  service.add_field('pp_Description', "Payment Id: #{@payment.id}")
+  service.add_field('ppmpf_1', @payment.id) #optional fields
+  service.add_field('ppmpf_2', @payment.id) #optional fields
+  service.add_field('ppmpf_3', @payment.id) #optional fields
+  service.add_field('ppmpf_4', 'howmuch') #optional fields
+  service.add_field('ppmpf_5', @payment.id) #optional fields - we use it to fetch payment id
+  if ENV['pp_Version'] == '2.0'
+    if @payment.order.customer && !@payment.order.customer.new_record?
+      service.add_field('pp_IsRegisteredCustomer', 'Yes')
+      service.add_field('pp_CustomerID', @payment.order.customer_id)
+      service.add_field('pp_CustomerEmail', @payment.order.customer_email) if @payment.order.customer_email.present?
+      service.add_field('pp_CustomerMobile', @payment.order.customer_pk_formatted_phone)if @payment.order.customer.customer_pk_formatted_phone.present?
+    else
+      service.add_field('pp_IsRegisteredCustomer', 'No')
+    end
+  end
+  nil
+end %>
+<%= javascript_tag do %>
+  document.addEventListener("DOMContentLoaded", function() {      
+    let fieldEl = document.querySelector("input[name=utf8]")
+    if(fieldEl) fieldEl.parentNode.removeChild(fieldEl)
+
+    let fieldEl2 = document.querySelector("input[name=authenticity_token]")
+    if(fieldEl2) fieldEl2.parentNode.removeChild(fieldEl2)
+
+    document.getElementById('payment-form').submit();
+  });
+<% end %>
