@@ -44,11 +44,11 @@ module OffsitePayments
 #      end
       @payment = @order.payments.processing.find_or_create_by(amount: @order.order_total_after_store_credit, payment_method: @payment_method)
       case @payment_method.class.name
-      when Spree::BillingIntegration::Ubl.name
+      when 'Spree::BillingIntegration::Ubl'
         render :ubl_checkout_payment
-      when Spree::BillingIntegration::EasyPaisa.name
+      when 'Spree::BillingIntegration::EasyPaisa'
         render :easy_paisa_checkout_payment
-      when Spree::BillingIntegration::JazzCash.name
+      when 'Spree::BillingIntegration::JazzCash'
         render :jazz_cash_checkout_payment
       end
     end

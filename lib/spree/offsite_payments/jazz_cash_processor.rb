@@ -18,8 +18,8 @@ module Spree::OffsitePayments
       
     
     def load_payment
-      @payment = Spree::Payment.find_by(id: @notify.order_ref_number) ||
-        raise(PaymentNotFoundError, "Could not find payment with order_ref_number #{@notify.order_ref_number}")
+      @payment = Spree::Payment.find_by(id: @notify.bill_reference) ||
+        raise(PaymentNotFoundError, "Could not find payment with bill_reference #{@notify.bill_reference}")
       @order = @payment.order
     end
             
@@ -52,7 +52,7 @@ module Spree::OffsitePayments
     end
     
     def process_payment
-      return false if @notify.order_ref_number.blank?
+      return false if @notify.bill_reference.blank?
       load_payment
       if @notify.acknowledge
         ensure_payment_not_processed
