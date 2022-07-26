@@ -1,0 +1,25 @@
+<%= payment_service_for @payment.id, @payment.payment_method.preferred_store,
+    amount: @payment.calculated_amount,
+    currency: @payment.currency,
+    return_url: spree.return_url(method: :easy_paisa, caller: (@caller || 'web') ),
+    test: @payment.payment_method.test?,
+    service: :easy_paisa,
+    html: { id: 'payment-form'} do |service|
+
+    service.store_secret = @payment.payment_method.hash_key
+    service.valid_till = Time.now.tomorrow
+    service.add_field('emailAddr', @payment.order.customer_email)
+    service.add_field('mobileNum', @payment.order.customer_pk_intl_formatted_phone&.gsub('+', ''))
+    service.add_field('autoRedirect', '0') #If merchant wants to redirect to final post back URL and the end of transaction
+    # service.add_field('bankIdentifier', 'XXXXX') #If the merchant wants to pass the customer’s 
+                                                  #selected Bank (Identification Number) in order 
+                                                  #to validate the Card Number with chosen Bank. (6 digit alphanumeric value)
+    service.add_field('paymentMethod', 'CC_PAYMENT_METHOD') #OTC_PAYMENT_METHOD/MA_PAYMENT_METHOD/CC_PAYMENT_METHOD
+    nil
+  end
+%>
+<%= javascript_tag do %>
+  document.addEventListener("DOMContentLoaded", function() {
+    document.getElementById('payment-form').submit();
+  });
+<%end%>

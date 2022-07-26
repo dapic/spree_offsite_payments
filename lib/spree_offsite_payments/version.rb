@@ -1,3 +1,3 @@
 module SpreeOffsitePayments
-  VERSION = "0.0.1"
+  VERSION = "0.2.13"
 end
